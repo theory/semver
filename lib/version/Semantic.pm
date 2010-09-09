@@ -1,13 +1,114 @@
 package version::Semantic;
 
-use 5.6.2;
+use 5.8.0;
 use strict;
-use warnings;
 use version;
+use Scalar::Util ();
+
+use overload (
+    '""'  => \&stringify,
+    '<=>' => \&compare,
+    'cmp' => \&compare,
+    'bool' => \&_bool,
+);
 
 our @ISA = qw(version);
 our $VERSION = '0.1.0'; # For Module::Build
+
+sub _die {
+    require Carp;
+    Carp::croak(@_);
+}
+
+my $num_rx = qr{^(?:[1-9][0-9]*|0)$};
+my $alnum_rx = qr{^(?:[1-9][0-9]*|0)([a-zA-Z][-0-9A-Za-z]*)?$};
+
+sub new {
+    my $proto  = shift;
+    my $class  = ref $proto || $proto;
+    my $ival   = shift;
+
+    # A vstring has only numbers, so just use them.
+    return [ map { ord } split // => $ival ] => $class
+        if Scalar::Util::isvstring($ival);
+
+    # Get the parts and strip off optional leading "v".
+    my @parts = split /[.]/ => $ival;
+    $parts[0] =~ s/^v// if $parts[0];
+
+    # Validate each part.
+    _die qq{Invalid semantic version string format: "$ival"}
+        unless @parts == 3
+        && $parts[0] =~ $num_rx
+        && $parts[1] =~ $num_rx
+        && $parts[2] =~ $alnum_rx;
+
+    # If we found an ASCII string, store it separately.
+    if (my $ascii = $1) {
+        $parts[2] =~ s{\Q$ascii\E$}{};
+        push @parts, $ascii;
+    }
+
+    return bless \@parts => $class;
+}
+
 $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
+
+sub normal   {
+    my $self   = shift;
+    my $format = '%s.%s.%s';
+    $format   .= '%s' if @{ $self } == 4;
+    sprintf $format, @{ $self }
+}
+
+*stringify = \&normal;
+sub numify   { _die 'Semantic versions cannot be numified'; }
+sub is_alpha { !!shift->[3]; }
+sub is_qv    { 1 }
+sub _bool    { 1 }
+
+sub compare {
+    my ($left, $right, $rev) = @_;
+
+    unless (eval { $right->isa(__PACKAGE__) }) {
+        if (eval $right->isa('version')) {
+            # Re-parse from the base class.
+            $right = ref($left)->new($right->normal);
+        } else {
+            # try to bless $right into our class
+            eval { $right = ref($left)->new($right) };
+            return -1 if $@;
+        }
+    }
+
+    # Reverse?
+    ($left, $right) = ($right, $left) if $rev;
+
+    # Major and minor win.
+    for (my $i = 0; $i <= 1; $i++ ) {
+        if (my $ret = $left->[$i] <=> $right->[$i]) {
+            return $ret;
+        }
+    }
+
+    # Gotta compare patch version and alpha.
+    my $lnum = $left->[2];
+    my $lstr = $left->[3];
+    my $rnum = $right->[2];
+    my $rstr = $right->[3];
+
+    if ($lstr) {
+        # non-ascii is greater than with ascii.
+        return $lnum <=> $rnum || -1 if not $rstr;
+        # Both strings are present.
+        return $lnum <=> $rnum|| lc $lstr cmp lc $rstr;
+    } else {
+        # No special string, just compare integers.
+        return $lnum <=> $rnum if not $rstr;
+        # non-ascii is greater than with ascii.
+        return $lnum <=> $rnum || 1;
+    }
+}
 
 
 1;

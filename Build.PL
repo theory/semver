@@ -14,6 +14,7 @@ Module::Build->new(
     },
     requires           => {
         'version' => 0,
+        'perl'    => 5.008000,
     },
     meta_merge         => {
         resources => {
