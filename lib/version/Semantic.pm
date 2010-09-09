@@ -259,9 +259,24 @@ it's gotta be there.
 
 =head3 C<normal>
 
+  my $str = $semver->normal;
+
+Returns a normalized representation of the version string. This string will
+always be a strictly-valid dotted-integer semantic version string suitable for
+passing to C<new()>.
+
 =head3 C<numify>
 
+Throws an exception. Semantic versions cannot be numified. Just don't go
+there.
+
 =head3 C<is_alpha>
+
+  my $is_alpha = $semver->is_alpha;
+
+Returns true if an ASCII string is appended to the end of the version string.
+This also means that the verison number is a "special version", in the
+semantic versioning specification meaning of the phrase.
 
 =head3 C<compare>
 
