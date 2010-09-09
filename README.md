@@ -1,10 +1,23 @@
 version/Semantic version 0.1.0
 ==============================
 
-version::Semantic is a subclass of [version] that implements the [Semantic
-Versioning Specification].
+This module subclasses [`version`] to create semantic versions, as defined by
+the [Semantic Versioning Specification]. The two salient points of the
+specification, for the purposes of version formatting, are:
 
-[version]: http://search.cpan.org/perldoc?version
+1. A normal version number MUST take the form X.Y.Z where X, Y, and Z are
+integers. X is the major version, Y is the minor version, and Z is the patch
+version. Each element MUST increase numerically. For instance: 1.9.0 < 1.10.0
+< 1.11.0.
+
+2. A special version number MAY be denoted by appending an arbitrary string
+immediately following the patch version. The string MUST be comprised of only
+alphanumerics plus dash (`/0-9A-Za-z-/`) and MUST begin with an alpha
+character (`/A-Za-z/`). Special versions satisfy but have a lower precedence
+than the associated normal version. Precedence **should** be determined by
+lexicographic ASCII sort order. For instance: 1.0.0beta1 < 1.0.0beta2 < 1.0.0.
+
+[`version`]: http://search.cpan.org/perldoc?version
 [Semantic Versioning Specification]: http://semver.org/
 
 Installation
@@ -20,7 +33,7 @@ To install this module, type the following:
 Dependencies
 ------------
 
-DBIx::Connection requires DBI 1.605 or higher.
+version::Semantic requires version.
 
 Copyright and License
 ---------------------
