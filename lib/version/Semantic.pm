@@ -103,7 +103,6 @@ sub normal   {
 *stringify = \&normal;
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{version}[3]; }
-sub is_qv    { 1 }
 sub _bool    {
     my $v = shift->{version};
     return $v->[0] || $v->[1] || $v->[2];
