@@ -197,7 +197,7 @@ E<lt> 1.0.0.
 
 For strict parsing of semantic version numbers, use the C<new()> constructor.
 If you need something more flexible, use C<declare()>. And if you need
-something more compabible with what L<version> expects, try C<parse()>.
+something more comparable with what L<version> expects, try C<parse()>.
 Compare how these constructors deal with various version strings:
 
      String   | new        | declare    | parse
@@ -216,11 +216,11 @@ Compare how these constructors deal with various version strings:
   '1b'        | <error>    | 1.0.0b     | 1.0.0b
   '9.0beta4'  | <error>    | 9.0.0beta4 | 9.0.0beta4
 
-As with L<version> objects, the comparision and stringification operators are
-all overloded, so that you can compare semantic versions. You can also compare
-semantic versions with version objects (but not the other way around, alas).
-Boolean operators are also overloaded, such that all semantic version objects
-except for those consisting only of zeros are considered true.
+As with L<version> objects, the comparison and stringification operators are
+all overloaded, so that you can compare semantic versions. You can also
+compare semantic versions with version objects (but not the other way around,
+alas). Boolean operators are also overloaded, such that all semantic version
+objects except for those consisting only of zeros are considered true.
 
 =head1 Interface
 
@@ -243,7 +243,7 @@ Similar to L<version>'s C<declare()> constructor, the parts of the version
 string parsed are always considered to be integers. This method will also fill
 in other missing parts.
 
-This constructor uses the most forviging parser. Consider using it to
+This constructor uses the most forgiving parser. Consider using it to
 normalize version strings.
 
 =head3 C<parse>
@@ -251,13 +251,19 @@ normalize version strings.
   my $semver = version::Semantic->parse('1.2'); # 1.200.0
 
 This parser dispatches to C<version>'s C<parse> constructor, which tries to be
-more flexible in how it converts simple decimal strings. Some examles: Not
+more flexible in how it converts simple decimal strings. Some examples: Not
 really recommended, but given the sorry history of version strings in Perl,
 it's gotta be there.
 
 =head2 Instance Methods
 
-=head3
+=head3 C<normal>
+
+=head3 C<numify>
+
+=head3 C<is_alpha>
+
+=head3 C<compare>
 
 =head1 See Also
 
