@@ -1,11 +1,10 @@
 package version::Semantic;
 
-use 5.8.0;
+use 5.10.0;
 use strict;
-# I'm unable to override declare() if I use version on 5.10 or higher.
-# No idea why not. So only load it if it's not core.
-#require version if $] < 5.010;
-use version;
+# XXX I'm unable to override declare() if I explicitly `use version`. No idea
+# why not. So don't load it for now. 5.8.x won't work, but meh.
+# use version;
 use Scalar::Util ();
 
 use overload (
@@ -26,18 +25,27 @@ sub _die {
 my $num_rx = qr{^(?:[1-9][0-9]*|0)$};
 my $alnum_rx = qr{^(?:[1-9][0-9]*|0)([a-zA-Z][-0-9A-Za-z]*)?$};
 
+sub _new {
+    my $class = shift;
+    $class = ref $class || $class;
+
+    return bless {
+        original => shift,
+        qv       => 1,
+        version  => shift,
+    } => $class;
+}
+
 sub new {
-    my $proto = shift;
-    my $class = ref $proto || $proto;
-    my $ival  = shift;
-    use Test::More;
+    my ($class, $ival) = @_;
+
     # A vstring has only numbers, so just use them.
-    return bless [ map { ord } split // => $ival ] => $class
+    return $class->_new($ival, [ map { ord } split // => $ival ])
         if Scalar::Util::isvstring($ival);
 
     # Get the parts and strip off optional leading "v".
-    $ival =~ s/^v//;
     my @parts = split /[.]/ => $ival;
+    $parts[0] =~ s/^v// if $parts[0];
 
     # Validate each part.
     _die qq{Invalid semantic version string format: "$ival"}
@@ -52,20 +60,18 @@ sub new {
         push @parts, $ascii;
     }
 
-    return bless \@parts => $class;
+    return $class->_new($ival, \@parts);
 }
 
 $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
 
 sub declare {
-    my $proto = shift;
-    my $class = ref $proto || $proto;
-    my $ival  = shift;
+    my ($class, $ival) = @_;
 
-    return $proto->new($ival) if Scalar::Util::isvstring($ival);
+    return $class->new($ival) if Scalar::Util::isvstring($ival);
 
-    $ival =~ s/^v//;
     my @parts = split /[.]/ => $ival;
+    $parts[0] =~ s/^v// if $parts[0];
     my @ret = do {
         no warnings;
         map { int $parts[$_] } 0..2;
@@ -74,38 +80,34 @@ sub declare {
         push @ret, $1;
     }
 
-    return bless \@ret => $class;
+    return $class->_new($ival, \@ret);
 }
 
 sub parse {
-    my $proto = shift;
-    my $class = ref $proto || $proto;
-    my $ival  = shift;
+    my ($class, $ival) = @_;
 
-    return $proto->new($ival) if Scalar::Util::isvstring($ival);
+    return $class->new($ival) if Scalar::Util::isvstring($ival);
 
-    $ival =~ s/([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$//;
-    my $str = $1 || '';
-    return $proto->new(version->parse($ival)->normal . $str);
+    (my $v = $ival) =~ s/([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$//;
+    my $alpha = $1 || '';
+    return $class->new(version->parse($v)->normal . $alpha);
 }
 
 sub normal   {
-    my $self   = shift;
+    my $version = shift->{version};
     my $format = '%s.%s.%s';
-    $format   .= '%s' if @{ $self } == 4;
-    sprintf $format, @{ $self }
+    $format   .= '%s' if @{ $version } == 4;
+    sprintf $format, @{ $version }
 }
 
 *stringify = \&normal;
 sub numify   { _die 'Semantic versions cannot be numified'; }
-sub is_alpha { !!shift->[3]; }
+sub is_alpha { !!shift->{version}[3]; }
 sub is_qv    { 1 }
 sub _bool    {
-    my $self = shift;
-    return $self->[0] || $self->[1] || $self->[2];
+    my $v = shift->{version};
+    return $v->[0] || $v->[1] || $v->[2];
 }
-
-*_declare = \&declare;
 
 sub compare {
     my ($left, $right, $rev) = @_;
@@ -117,13 +119,15 @@ sub compare {
         } else {
             # try to bless $right into our class
             local $@;
-            $right = eval { ref($left)->_declare($right) };
+            $right = eval { ref($left)->declare($right) };
             return -1 if $@;
         }
     }
 
     # Reverse?
-    ($left, $right) = ($right, $left) if $rev;
+    ($left, $right) = $rev
+         ? ($right->{version}, $left->{version})
+         : ($left->{version}, $right->{version});
 
     # Major and minor win.
     for my $i (0..1) {
@@ -252,6 +256,10 @@ This parser dispatches to C<version>'s C<parse> constructor, which tries to be
 more flexible in how it converts simple decimal strings. Some examles: Not
 really recommended, but given the sorry history of version strings in Perl,
 it's gotta be there.
+
+=head2 Instance Methods
+
+=head3
 
 =head1 See Also
 

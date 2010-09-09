@@ -160,6 +160,8 @@ for my $v qw(
     v1.2.0
 ) {
     my $version = version->new($v);
+    use Data::Dumper::Concise;
+    diag Dumper $version;
     ok $semver == $version, "$semver == $version";
 }
 
@@ -201,7 +203,7 @@ for my $spec (
     ['99999998',  '99999998.0.0'],
 ) {
     my $r = $CLASS->new($spec->[1]);
-    isa_ok my $l = version::Semantic->_declare($spec->[0]), $CLASS,
+    isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS,
         "$spec->[0] should be declarable as a semver";
     is $l->normal, $spec->[1], "... And it should be normalized to $spec->[1]";
 
