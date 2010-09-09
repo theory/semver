@@ -4,11 +4,11 @@ use 5.10.0;
 use strict;
 # XXX I'm unable to override declare() if I explicitly `use version`. No idea
 # why not. So don't load it for now. 5.8.x won't work, but meh.
-# use version;
+#use version;
 use Scalar::Util ();
 
 use overload (
-    '""'   => \&stringify,
+    '""'   => 'stringify',
     '<=>'  => \&compare,
     'cmp'  => \&compare,
     'bool' => \&_bool,
@@ -100,10 +100,9 @@ sub normal   {
     sprintf $format, @{ $version }
 }
 
-*stringify = \&normal;
-sub numify   { _die 'Semantic versions cannot be numified'; }
-sub is_alpha { !!shift->{version}[3]; }
-sub _bool    {
+sub numify    { _die 'Semantic versions cannot be numified'; }
+sub is_alpha  { !!shift->{version}[3]; }
+sub _bool     {
     my $v = shift->{version};
     return $v->[0] || $v->[1] || $v->[2];
 }

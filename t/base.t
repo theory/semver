@@ -40,8 +40,8 @@ for my $v qw(
     999999999999999333333.0.0
 ) {
     isa_ok my $semver =$CLASS->new($v), $CLASS, "new($v)";
+    is "$semver", $v, qq{$v should stringify to "$v""};
     my $str = $v =~ /^v/ ? substr $v, 1 : $v;
-    is "$semver", $str, qq{$v should stringify to "$str""};
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
     ok $v =~ /0\.0\.0/ ? !$semver : !!$semver, "$v should be true";
