@@ -2,6 +2,9 @@ package version::Semantic;
 
 use 5.8.0;
 use strict;
+# I'm unable to override declare() if I use version on 5.10 or higher.
+# No idea why not. So only load it if it's not core.
+#require version if $] < 5.010;
 use version;
 use Scalar::Util ();
 
@@ -24,17 +27,17 @@ my $num_rx = qr{^(?:[1-9][0-9]*|0)$};
 my $alnum_rx = qr{^(?:[1-9][0-9]*|0)([a-zA-Z][-0-9A-Za-z]*)?$};
 
 sub new {
-    my $proto  = shift;
-    my $class  = ref $proto || $proto;
-    my $ival   = shift;
-
+    my $proto = shift;
+    my $class = ref $proto || $proto;
+    my $ival  = shift;
+    use Test::More;
     # A vstring has only numbers, so just use them.
-    return [ map { ord } split // => $ival ] => $class
+    return bless [ map { ord } split // => $ival ] => $class
         if Scalar::Util::isvstring($ival);
 
     # Get the parts and strip off optional leading "v".
+    $ival =~ s/^v//;
     my @parts = split /[.]/ => $ival;
-    $parts[0] =~ s/^v// if $parts[0];
 
     # Validate each part.
     _die qq{Invalid semantic version string format: "$ival"}
@@ -54,6 +57,38 @@ sub new {
 
 $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
 
+sub declare {
+    my $proto = shift;
+    my $class = ref $proto || $proto;
+    my $ival  = shift;
+
+    return $proto->new($ival) if Scalar::Util::isvstring($ival);
+
+    $ival =~ s/^v//;
+    my @parts = split /[.]/ => $ival;
+    my @ret = do {
+        no warnings;
+        map { int $parts[$_] } 0..2;
+    };
+    if ($ival =~ /([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$/) {
+        push @ret, $1;
+    }
+
+    return bless \@ret => $class;
+}
+
+sub parse {
+    my $proto = shift;
+    my $class = ref $proto || $proto;
+    my $ival  = shift;
+
+    return $proto->new($ival) if Scalar::Util::isvstring($ival);
+
+    $ival =~ s/([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$//;
+    my $str = $1 || '';
+    return $proto->new(version->parse($ival)->normal . $str);
+}
+
 sub normal   {
     my $self   = shift;
     my $format = '%s.%s.%s';
@@ -66,17 +101,20 @@ sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->[3]; }
 sub is_qv    { 1 }
 sub _bool    { 1 }
+*_declare = \&declare;
+*_parse   = \&parse;
 
 sub compare {
     my ($left, $right, $rev) = @_;
 
     unless (eval { $right->isa(__PACKAGE__) }) {
-        if (eval $right->isa('version')) {
+        if (eval { $right->isa('version') }) {
             # Re-parse from the base class.
             $right = ref($left)->new($right->normal);
         } else {
             # try to bless $right into our class
-            eval { $right = ref($left)->new($right) };
+            local $@;
+            $right = eval { ref($left)->_declare($right) };
             return -1 if $@;
         }
     }
@@ -85,7 +123,7 @@ sub compare {
     ($left, $right) = ($right, $left) if $rev;
 
     # Major and minor win.
-    for (my $i = 0; $i <= 1; $i++ ) {
+    for my $i (0..1) {
         if (my $ret = $left->[$i] <=> $right->[$i]) {
             return $ret;
         }
@@ -109,7 +147,6 @@ sub compare {
         return $lnum <=> $rnum || 1;
     }
 }
-
 
 1;
 __END__
