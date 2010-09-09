@@ -160,8 +160,6 @@ for my $v qw(
     v1.2.0
 ) {
     my $version = version->new($v);
-    use Data::Dumper::Concise;
-    diag Dumper $version;
     ok $semver == $version, "$semver == $version";
 }
 
