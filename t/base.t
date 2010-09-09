@@ -2,8 +2,8 @@
 
 use strict;
 use warnings;
-#use Test::More tests => 113;
-use Test::More 'no_plan';
+use Test::More tests => 395;
+# use Test::More 'no_plan';
 
 my $CLASS;
 BEGIN {
@@ -35,7 +35,6 @@ for my $v qw(
     1.0.0beta1
     1.0.0beta2
     1.0.0
-    0.0.0
     0.0.0rc1
     v1.2.2
     999999999999999333333.0.0
@@ -45,7 +44,7 @@ for my $v qw(
     is "$semver", $str, qq{$v should stringify to "$str""};
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
-    ok !!$semver, "$v should be true";
+    ok $v =~ /0\.0\.0/ ? !$semver : !!$semver, "$v should be true";
     ok $semver->is_qv, "$v should be dotted-decimal";
 
     my $is_alpha = $semver->is_alpha;
@@ -189,7 +188,7 @@ for my $spec (
     ['.0.02',          '0.0.2'],
     ['1..02',          '1.0.2'],
     ['1..',            '1.0.0'],
-    ['1.1',            '1.1.0', '1.100.0'],
+    ['1.1',            '1.1.0',   '1.100.0'],
     ['1.1b1',          '1.1.0b1', '1.100.0b1'],
     ['1.2.b1',         '1.2.0b1'],
     ['1b',             '1.0.0b'],
@@ -206,15 +205,17 @@ for my $spec (
         "$spec->[0] should be declarable as a semver";
     is $l->normal, $spec->[1], "... And it should be normalized to $spec->[1]";
 
-    my $exp = $spec->[2] || $spec->[1];
-    isa_ok $l = version::Semantic->parse($spec->[0]), $CLASS,
-        "$spec->[0] should be parseable as a semver";
-    is $l->normal, $exp, "... And it should be normalized to $exp";
-
     # Compare the non-semantic version string to the semantic one.
     cmp_ok $spec->[0], '==', $r, qq{$r == "$spec->[0]"};
 
-    # Try with the parsed version.
-    $r = $CLASS->new($spec->[2]) if $spec->[2];
-    cmp_ok $l, '==', $r, qq{$l == $r};
+    if ($spec->[0] && $spec->[0] !~ /^[a-z]/ && $spec->[0] !~ /[.]{2}/) {
+        my $exp = $spec->[2] || $spec->[1];
+        isa_ok $l = version::Semantic->parse($spec->[0]), $CLASS,
+            "$spec->[0] should be parseable as a semver";
+        is $l->normal, $exp, "... And it should be normalized to $exp";
+
+        # Try with the parsed version.
+        $r = $CLASS->new($spec->[2]) if $spec->[2];
+        cmp_ok $l, '==', $r, qq{$l == $r};
+    }
 }

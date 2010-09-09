@@ -9,9 +9,9 @@ use version;
 use Scalar::Util ();
 
 use overload (
-    '""'  => \&stringify,
-    '<=>' => \&compare,
-    'cmp' => \&compare,
+    '""'   => \&stringify,
+    '<=>'  => \&compare,
+    'cmp'  => \&compare,
     'bool' => \&_bool,
 );
 
@@ -100,9 +100,12 @@ sub normal   {
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->[3]; }
 sub is_qv    { 1 }
-sub _bool    { 1 }
+sub _bool    {
+    my $self = shift;
+    return $self->[0] || $self->[1] || $self->[2];
+}
+
 *_declare = \&declare;
-*_parse   = \&parse;
 
 sub compare {
     my ($left, $right, $rev) = @_;
@@ -187,6 +190,68 @@ lexicographic ASCII sort order. For instance: 1.0.0beta1 E<lt> 1.0.0beta2
 E<lt> 1.0.0.
 
 =back
+
+=head2 Usage
+
+For strict parsing of semantic version numbers, use the C<new()> constructor.
+If you need something more flexible, use C<declare()>. And if you need
+something more compabible with what L<version> expects, try C<parse()>.
+Compare how these constructors deal with various version strings:
+
+     String   | new        | declare    | parse
+ -------------+------------+-------------------------
+  '1.0.0'     | 1.0.0      | 1.0.0      | 1.0.0
+  '5.5.2b1'   | 5.5.2b1    | 5.5.2b1    | 5.5.2b1
+  '1.0'       | <error>    | 1.0.0      | 1.0.0
+  '.0.02'     | <error>    | 0.0.2      | 0.0.2
+  '1..'       | <error>    | 1.0.0      | <error>
+  'rc1'       | <error>    | 0.0.0rc1   | <error>
+  ''          | <error>    | 0.0.0      | <error>
+  '  012.2.2' | <error>    | 12.2.2     | 12.2.2
+  '1.1'       | <error>    | 1.1.0      | 1.100.0
+  '1.1b1'     | <error>    | 1.1.0b1    | 1.100.0b1
+  '1.2.b1'    | <error>    | 1.2.0b1    | 1.2.0b1
+  '1b'        | <error>    | 1.0.0b     | 1.0.0b
+  '9.0beta4'  | <error>    | 9.0.0beta4 | 9.0.0beta4
+
+As with L<version> objects, the comparision and stringification operators are
+all overloded, so that you can compare semantic versions. You can also compare
+semantic versions with version objects (but not the other way around, alas).
+Boolean operators are also overloaded, such that all semantic version objects
+except for those consisting only of zeros are considered true.
+
+=head1 Interface
+
+=head2 Constructors
+
+=head3 C<new>
+
+  my $semver = version::Semantic->new('1.2.2');
+
+Performs a validating parse of the version string and returns a new semantic
+version object. If the version string does not adhere to the semantic version
+specification an exception will be thrown. See C<declare> and C<parse> for
+more forgiving constructors.
+
+=head3 C<declare>
+
+  my $semver = version::Semantic->declare('1.2'); # 1.2.0
+
+Similar to L<version>'s C<declare()> constructor, the parts of the version
+string parsed are always considered to be integers. This method will also fill
+in other missing parts.
+
+This constructor uses the most forviging parser. Consider using it to
+normalize version strings.
+
+=head3 C<parse>
+
+  my $semver = version::Semantic->parse('1.2'); # 1.200.0
+
+This parser dispatches to C<version>'s C<parse> constructor, which tries to be
+more flexible in how it converts simple decimal strings. Some examles: Not
+really recommended, but given the sorry history of version strings in Perl,
+it's gotta be there.
 
 =head1 See Also
 
