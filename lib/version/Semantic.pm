@@ -9,8 +9,8 @@ use Scalar::Util ();
 
 use overload (
     '""'   => 'stringify',
-    '<=>'  => \&compare,
-    'cmp'  => \&compare,
+    '<=>'  => 'compare',
+    'cmp'  => 'compare',
     'bool' => \&_bool,
 );
 
@@ -275,10 +275,42 @@ there.
   my $is_alpha = $semver->is_alpha;
 
 Returns true if an ASCII string is appended to the end of the version string.
-This also means that the verison number is a "special version", in the
+This also means that the version number is a "special version", in the
 semantic versioning specification meaning of the phrase.
 
 =head3 C<compare>
+
+Compares the semantic version object to another version object or string and
+returns 0 if they're the same, -1 if the invocant is smaller than the
+argument, and 1 if the invocant is greater than the argument.
+
+Mostly you don't need to worry about this: Just use the comparison operators
+instead. They will use this method:
+
+  if ($semver < $another_semver) {
+      die "Need $another_semver or higher";
+  }
+
+Note that in addition to comparing other semantic version objects, you can
+also compare regular L<version> objects:
+
+  if ($semver < $version) {
+      die "Need $version or higher";
+  }
+
+You can also pass in a version string. It will be turned into a semantic
+version object using C<declare>. So if you're using integer versions, you may
+or may not get what you want:
+
+  my $semver  = version::Semver->new('1.2.0');
+  my $version = '1.2';
+  my $bool    = $semver == $version; # true
+
+If that's not what you want, pass the string to C<parse> first:
+
+  my $semver  = version::Semver->new('1.2.0');
+  my $version = version::Semver->parse('1.2'); # 1.200.0
+  my $bool    = $semver == $version; # false
 
 =head1 See Also
 

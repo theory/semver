@@ -11,3 +11,6 @@ all_pod_files_spelling_ok();
 __DATA__
 SemVer
 Versioning
+invocant
+numified
+versioning
