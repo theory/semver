@@ -2,9 +2,7 @@ package version::Semantic;
 
 use 5.10.0;
 use strict;
-# XXX I'm unable to override declare() if I explicitly `use version`. No idea
-# why not. So don't load it for now. 5.8.x won't work, but meh.
-#use version;
+use version 0.82;
 use Scalar::Util ();
 
 use overload (
@@ -16,6 +14,9 @@ use overload (
 
 our @ISA = qw(version);
 our $VERSION = '0.1.0'; # For Module::Build
+
+# Prevent version.pm fro polluting our namespace.
+sub import { return }
 
 sub _die {
     require Carp;

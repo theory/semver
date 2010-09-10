@@ -13,7 +13,7 @@ Module::Build->new(
         'Test::More'       => '0.88',
     },
     requires           => {
-        'version' => 0,
+        'version' => 0.82,
         'perl'    => 5.010000,
     },
     meta_merge         => {
