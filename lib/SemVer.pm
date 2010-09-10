@@ -106,7 +106,7 @@ sub compare {
     ($left, $right) = $rev? ($right, $left): ($left, $right);
 
     # Major and minor win.
-    if (my $ret = _compare($left, $right)) {
+    if (my $ret = $left->vcmp($right, 0)) {
         return $ret;
     } else {
         # They're equal. Check the extra text stuff.
@@ -117,18 +117,6 @@ sub compare {
             return $right->{extra} ? 1 : 0;
         }
     }
-}
-
-sub _compare {
-    my $l = shift->{version};
-    my $r = shift->{version};
-    for my $i (0..2) {
-        no warnings;
-        if (my $ret = $l->[$i] <=> $r->[$i]) {
-            return $ret;
-        }
-    }
-    return 0;
 }
 
 1;
