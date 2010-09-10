@@ -145,8 +145,8 @@ SemVer - Use semantic version numbers
 
 =head1 Description
 
-This module subclasses L<version> to create semantic versions, as defined
-by the L<Semantic Versioning Specification (SemVer)|http://semver.org/>. The two
+This module subclasses L<version> to create semantic versions, as defined by
+the L<Semantic Versioning Specification (SemVer)|http://semver.org/>. The two
 salient points of the specification, for the purposes of version formatting,
 are:
 
@@ -322,12 +322,11 @@ If that's not what you want, pass the string to C<parse> first:
 =head1 Support
 
 This module is managed in an open GitHub repository,
-L<http://github.com/theory/semver/>. Feel free to fork and
-contribute, or to clone L<git://github.com/theory/semver.git> and send
-patches!
+L<http://github.com/theory/semver/>. Feel free to fork and contribute, or to
+clone L<git://github.com/theory/semver.git> and send patches!
 
-Found a bug? Please L<post|http://github.com/theory/semver/issues>
-or L<email|mailto:bug-semver@rt.cpan.org> a report!
+Found a bug? Please L<post|http://github.com/theory/semver/issues> or
+L<email|mailto:bug-semver@rt.cpan.org> a report!
 
 =head1 Authors
 
