@@ -7,8 +7,8 @@ use Scalar::Util ();
 
 use overload (
     '""'   => 'stringify',
-    '<=>'  => 'compare',
-    'cmp'  => 'compare',
+    '<=>'  => 'vcmp',
+    'cmp'  => 'vcmp',
 );
 
 our @ISA = qw(version);
@@ -98,7 +98,7 @@ sub normal   {
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
 
-sub compare {
+sub vcmp {
     my $left  = shift;
     my $right = ref($left)->declare(shift);
 
@@ -106,7 +106,7 @@ sub compare {
     ($left, $right) = shift() ? ($right, $left): ($left, $right);
 
     # Major and minor win.
-    if (my $ret = $left->vcmp($right, 0)) {
+    if (my $ret = $left->SUPER::vcmp($right, 0)) {
         return $ret;
     } else {
         # They're equal. Check the extra text stuff.
@@ -260,7 +260,7 @@ Returns true if an ASCII string is appended to the end of the version string.
 This also means that the version number is a "special version", in the
 semantic versioning specification meaning of the phrase.
 
-=head3 C<compare>
+=head3 C<vcmp>
 
 Compares the semantic version object to another version object or string and
 returns 0 if they're the same, -1 if the invocant is smaller than the

@@ -19,7 +19,7 @@ can_ok $CLASS, qw(
     numify
     is_alpha
     is_qv
-    compare
+    vcmp
 );
 
 # Try the basics.
@@ -112,7 +112,7 @@ for my $spec (
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
-    is $l->compare($r), 0, "$l->compare($r) == 0";
+    is $l->vcmp($r), 0, "$l->vcmp($r) == 0";
     is $l <=> $r, 0, "$l <=> $r == 0";
     is $r <=> $l, 0, "$r <=> $l == 0";
     cmp_ok $l, '==', $r, "$l == $r";
@@ -140,7 +140,7 @@ for my $spec (
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
-    cmp_ok $l->compare($r), '!=', 0, "$l->compare($r) != 0";
+    cmp_ok $l->vcmp($r), '!=', 0, "$l->vcmp($r) != 0";
     cmp_ok $l, '!=', $r, "$l != $r";
     cmp_ok $l, 'ne', $r, "$l ne $r";
 }
@@ -158,8 +158,8 @@ for my $spec (
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
-    cmp_ok $l->compare($r), '>', 0, "$l->compare($r) > 0";
-    cmp_ok $r->compare($l), '<', 0, "$r->compare($l) < 0";
+    cmp_ok $l->vcmp($r), '>', 0, "$l->vcmp($r) > 0";
+    cmp_ok $r->vcmp($l), '<', 0, "$r->vcmp($l) < 0";
     cmp_ok $l, '>',  $r, "$l > $r";
     cmp_ok $l, '>=', $r, "$l >= $r";
     cmp_ok $r, '<',  $l, "$r < $l";
