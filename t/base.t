@@ -7,7 +7,7 @@ use Test::More tests => 489;
 
 my $CLASS;
 BEGIN {
-    $CLASS = 'version::Semantic';
+    $CLASS = 'SemVer';
     use_ok $CLASS or die;
 }
 
@@ -213,7 +213,7 @@ for my $spec (
     ['0rc1',           '0.0.0rc1' ],
 ) {
     my $r = $CLASS->new($spec->[1]);
-    isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS, "Declared $spec->[0]";
+    isa_ok my $l = SemVer->declare($spec->[0]), $CLASS, "Declared $spec->[0]";
     my $string = Scalar::Util::isvstring($spec->[0])
         ? join '.', map { ord } split // => $spec->[0] : $spec->[0];
     $string =~ s/^\s+//;
@@ -228,7 +228,7 @@ for my $spec (
 
     if ($spec->[0] && $spec->[0] !~ /^[a-z]/ && $spec->[0] !~ /[.]{2}/) {
         my $exp = $spec->[2] || $spec->[1];
-        isa_ok $l = version::Semantic->parse($spec->[0]), $CLASS, "Parsed $spec->[0]";
+        isa_ok $l = SemVer->parse($spec->[0]), $CLASS, "Parsed $spec->[0]";
         $string = "v$string" if Scalar::Util::isvstring($spec->[0]);
         is $l->stringify, $string, "... And it should stringify to $string";
         is $l->normal,    $exp   , "... And it should normalize to $exp";

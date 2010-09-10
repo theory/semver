@@ -3,7 +3,7 @@ use warnings;
 use Module::Build;
 
 Module::Build->new(
-    module_name        => 'version::Semantic',
+    module_name        => 'SemVer',
     license            => 'perl',
     configure_requires => {
         'Module::Build' => '0.30',
@@ -18,9 +18,9 @@ Module::Build->new(
     },
     meta_merge         => {
         resources => {
-            homepage    => 'http://search.cpan.org/dist/version-Semantic/',
-            bugtracker  => 'http://github.com/theory/version-semantic/issues/',
-            repository  => 'http://github.com/theory/version-semantic/tree/',
+            homepage    => 'http://search.cpan.org/dist/SemVer/',
+            bugtracker  => 'http://github.com/theory/semver/issues/',
+            repository  => 'http://github.com/theory/semver/tree/',
         }
     },
 )->create_build_script;

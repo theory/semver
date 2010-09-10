@@ -1,4 +1,4 @@
-package version::Semantic;
+package SemVer;
 
 use 5.8.1;
 use strict;
@@ -137,12 +137,11 @@ __END__
 
 =head1 Name
 
-version::Semantic - Use semantic version numbers
+SemVer - Use semantic version numbers
 
 =head1 Synopsis
 
-  use version::Semantic;
-  our $VERSION = version::Semantic->new('1.2.0b1');
+  use SemVer; our $VERSION = SemVer->new('1.2.0b1');
 
 =head1 Description
 
@@ -207,7 +206,7 @@ objects except for those consisting only of zeros are considered true.
 
 =head3 C<new>
 
-  my $semver = version::Semantic->new('1.2.2');
+  my $semver = SemVer->new('1.2.2');
 
 Performs a validating parse of the version string and returns a new semantic
 version object. If the version string does not adhere to the semantic version
@@ -216,7 +215,7 @@ more forgiving constructors.
 
 =head3 C<declare>
 
-  my $semver = version::Semantic->declare('1.2'); # 1.2.0
+  my $semver = SemVer->declare('1.2'); # 1.2.0
 
 This parser strips out any underscores from the version string and passes it
 to to C<version>'s C<declare> constructor, which always creates dotted-integer
@@ -225,7 +224,7 @@ using it to normalize version strings.
 
 =head3 C<parse>
 
-  my $semver = version::Semantic->parse('1.2'); # 1.200.0
+  my $semver = SemVer->parse('1.2'); # 1.200.0
 
 This parser dispatches to C<version>'s C<parse> constructor, which tries to be
 more flexible in how it converts simple decimal strings and numbers. Not
@@ -237,11 +236,11 @@ inconsistencies. Included only for proper compatibility with L<version>.
 
 =head3 C<normal>
 
-  version::Semantic->declare('v1.2')->normal;      # 1.2.0
-  version::Semantic->parse('1.2')->normal;         # 1.200.0
-  version::Semantic->declare('1.02.0b1')->normal;  # 1.2.0b1
-  version::Semantic->parse('1.02_30')->normal      # 1.230.0
-  version::Semantic->parse(1.02_30)->normal        # 1.23.0
+  SemVer->declare('v1.2')->normal;      # 1.2.0
+  SemVer->parse('1.2')->normal;         # 1.200.0
+  SemVer->declare('1.02.0b1')->normal;  # 1.2.0b1
+  SemVer->parse('1.02_30')->normal      # 1.230.0
+  SemVer->parse(1.02_30)->normal        # 1.23.0
 
 Returns a normalized representation of the version. This string will always be
 a strictly-valid dotted-integer semantic version string suitable for passing
@@ -250,11 +249,11 @@ to C<new()>. Unlike L<version>'s C<normal> method, there will be no leading
 
 =head3 C<stringify>
 
-  version::Semantic->declare('v1.2')->stringify;    # v1.2
-  version::Semantic->parse('1.200')->stringify;     # v1.200
-  version::Semantic->declare('1.2b1')->stringify;   # v1.2b1
-  version::Semantic->parse(1.02_30)->stringify;     # v1.0230
-  version::Semantic->parse(1.02_30)->stringify;     # v1.023
+  SemVer->declare('v1.2')->stringify;    # v1.2
+  SemVer->parse('1.200')->stringify;     # v1.200
+  SemVer->declare('1.2b1')->stringify;   # v1.2b1
+  SemVer->parse(1.02_30)->stringify;     # v1.0230
+  SemVer->parse(1.02_30)->stringify;     # v1.023
 
 Returns a string that is as close to the original representation as possible.
 If the original representation was a numeric literal, it will be returned the
@@ -323,12 +322,12 @@ If that's not what you want, pass the string to C<parse> first:
 =head1 Support
 
 This module is managed in an open GitHub repository,
-L<http://github.com/theory/version-semantic/>. Feel free to fork and
-contribute, or to clone L<git://github.com/theory/version-semantic.git> and send
+L<http://github.com/theory/semver/>. Feel free to fork and
+contribute, or to clone L<git://github.com/theory/semver.git> and send
 patches!
 
-Found a bug? Please L<post|http://github.com/theory/version-semantic/issues>
-or L<email|mailto:bug-version-semantic@rt.cpan.org> a report!
+Found a bug? Please L<post|http://github.com/theory/semver/issues>
+or L<email|mailto:bug-semver@rt.cpan.org> a report!
 
 =head1 Authors
 

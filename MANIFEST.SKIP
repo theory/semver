@@ -27,7 +27,7 @@
 \b\.#
 
 # Avoid build files.
-^version-Semantic
+^SemVer
 
 # Avoid spelling test.
 pod-spelling.t$

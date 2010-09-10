@@ -1,4 +1,4 @@
-version::Semantic version 0.1.0
+SemVer version 0.1.0
 ===============================
 
 This module subclasses [`version`] to create semantic versions, as defined by
@@ -33,7 +33,7 @@ To install this module, type the following:
 Dependencies
 ------------
 
-version::Semantic requires version.
+SemVer requires version.
 
 Copyright and License
 ---------------------
