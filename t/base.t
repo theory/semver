@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 489;
+use Test::More tests => 490;
 #use Test::More 'no_plan';
 
 my $CLASS;
@@ -24,6 +24,7 @@ can_ok $CLASS, qw(
 
 # Try the basics.
 isa_ok my $version = $CLASS->new('0.1.0'), $CLASS, 'An instance';
+isa_ok $SemVer::VERSION, $CLASS, q{SemVer's own $VERSION};
 
 for my $v qw(
     1.2.2
