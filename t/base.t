@@ -2,8 +2,8 @@
 
 use strict;
 use warnings;
-#use Test::More tests => 490;
-use Test::More 'no_plan';
+use Test::More tests => 573;
+#use Test::More 'no_plan';
 
 my $CLASS;
 BEGIN {
