@@ -8,23 +8,24 @@ use Scalar::Util ();
 use overload (
     '""'   => 'stringify',
     '<=>'  => 'compare',
-    'cmp'  => 'compare',
-    'bool' => \&_bool,
+    'cmp'  => 'compare'
 );
 
 our @ISA = qw(version);
 our $VERSION = '0.1.0'; # For Module::Build
-
-# Prevent version.pm fro polluting our namespace.
-sub import { return }
 
 sub _die {
     require Carp;
     Carp::croak(@_);
 }
 
-my $num_rx = qr{^(?:[1-9][0-9]*|0)$};
-my $alnum_rx = qr{^(?:[1-9][0-9]*|0)([a-zA-Z][-0-9A-Za-z]*)?$};
+sub import {}
+
+my $STRICT_INTEGER_PART = qr/0|[1-9][0-9]*/;
+my $STRICT_DOTTED_INTEGER_PART = qr/\.[0-9]+/;
+my $STRICT_DOTTED_INTEGER_VERSION =
+    qr/ $STRICT_INTEGER_PART $STRICT_DOTTED_INTEGER_PART{2,} /x;
+my $OPTIONAL_EXTRA_PART = qr/[a-zA-Z][-0-9A-Za-z]*/;
 
 sub _new {
     my $class = shift;
@@ -40,28 +41,18 @@ sub _new {
 sub new {
     my ($class, $ival) = @_;
 
-    # A vstring has only numbers, so just use them.
-    return $class->_new($ival, [ map { ord } split // => $ival ])
-        if Scalar::Util::isvstring($ival);
+    # A vstring has only numbers, so just use it.
+    return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
-    # Get the parts and strip off optional leading "v".
-    my @parts = split /[.]/ => $ival;
-    $parts[0] =~ s/^v// if $parts[0];
-
-    # Validate each part.
+    my ($val, $extra) = (
+        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)($OPTIONAL_EXTRA_PART)?$/
+    );
     _die qq{Invalid semantic version string format: "$ival"}
-        unless @parts == 3
-        && $parts[0] =~ $num_rx
-        && $parts[1] =~ $num_rx
-        && $parts[2] =~ $alnum_rx;
+    	unless defined $val;
 
-    # If we found an ASCII string, store it separately.
-    if (my $ascii = $1) {
-        $parts[2] =~ s{\Q$ascii\E$}{};
-        push @parts, $ascii;
-    }
-
-    return $class->_new($ival, \@parts);
+    my $self = $class->SUPER::new($val);
+    $self->{extra} = $extra;
+    return $self;
 }
 
 $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
@@ -69,7 +60,8 @@ $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
 sub declare {
     my ($class, $ival) = @_;
 
-    return $class->new($ival) if Scalar::Util::isvstring($ival);
+    # A vstring has only numbers, so just use it.
+    return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
     my @parts = split /[.]/ => $ival;
     $parts[0] =~ s/^v// if $parts[0];
@@ -77,36 +69,42 @@ sub declare {
         no warnings;
         map { int $parts[$_] } 0..2;
     };
+
+    my $self = $class->SUPER::new(join '.', @ret);
     if ($ival =~ /([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$/) {
-        push @ret, $1;
+        push @ret, $self->{extra} = $1;
     }
 
-    return $class->_new($ival, \@ret);
+    return $self;
 }
 
 sub parse {
     my ($class, $ival) = @_;
 
-    return $class->new($ival) if Scalar::Util::isvstring($ival);
+    # A vstring has only numbers, so just use it.
+    return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
     (my $v = $ival) =~ s/([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$//;
-    my $alpha = $1 || '';
-    return $class->new(version->parse($v)->normal . $alpha);
+    my $alpha = $1;
+    my $self = $class->SUPER::parse($v);
+    $self->{extra} = $alpha;
+    return $self;
+}
+
+sub stringify {
+    my $self   = shift;
+    return $self->SUPER::stringify . ($self->{extra} || '');
 }
 
 sub normal   {
-    my $version = shift->{version};
-    my $format = '%s.%s.%s';
-    $format   .= '%s' if @{ $version } == 4;
-    sprintf $format, @{ $version }
+    my $self = shift;
+    my $v    = $self->{version};
+    sprintf '%u.%u.%u%s', (map { $_ || 0 }  @{ $v }[0..2]), $self->{extra} || '';
 }
 
-sub numify    { _die 'Semantic versions cannot be numified'; }
-sub is_alpha  { !!shift->{version}[3]; }
-sub _bool     {
-    my $v = shift->{version};
-    return $v->[0] || $v->[1] || $v->[2];
-}
+sub numify   { _die 'Semantic versions cannot be numified'; }
+sub is_alpha { !!shift->{extra} }
+sub is_qv    { 1 }
 
 sub compare {
     my ($left, $right, $rev) = @_;
@@ -124,34 +122,32 @@ sub compare {
     }
 
     # Reverse?
-    ($left, $right) = $rev
-         ? ($right->{version}, $left->{version})
-         : ($left->{version}, $right->{version});
+    ($left, $right) = $rev? ($right, $left): ($left, $right);
 
     # Major and minor win.
-    for my $i (0..1) {
-        if (my $ret = $left->[$i] <=> $right->[$i]) {
+    if (my $ret = _compare($left, $right)) {
+        return $ret;
+    } else {
+        # They're equal. Check the extra text stuff.
+        if (my $l = $left->{extra}) {
+            my $r = $right->{extra} or return -1;
+            return lc $l cmp lc $r;
+        } else {
+            return $right->{extra} ? 1 : 0;
+        }
+    }
+}
+
+sub _compare {
+    my $l = shift->{version};
+    my $r = shift->{version};
+    for my $i (0..2) {
+        no warnings;
+        if (my $ret = $l->[$i] <=> $r->[$i]) {
             return $ret;
         }
     }
-
-    # Gotta compare patch version and alpha.
-    my $lnum = $left->[2];
-    my $lstr = $left->[3];
-    my $rnum = $right->[2];
-    my $rstr = $right->[3];
-
-    if ($lstr) {
-        # non-ascii is greater than with ascii.
-        return $lnum <=> $rnum || -1 if not $rstr;
-        # Both strings are present.
-        return $lnum <=> $rnum|| lc $lstr cmp lc $rstr;
-    } else {
-        # No special string, just compare integers.
-        return $lnum <=> $rnum if not $rstr;
-        # non-ascii is greater than with ascii.
-        return $lnum <=> $rnum || 1;
-    }
+    return 0;
 }
 
 1;

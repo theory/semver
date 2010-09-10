@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 395;
+use Test::More tests => 400;
 # use Test::More 'no_plan';
 
 my $CLASS;
@@ -37,11 +37,11 @@ for my $v qw(
     1.0.0
     0.0.0rc1
     v1.2.2
-    999999999999999333333.0.0
+    999993333.0.0
 ) {
     isa_ok my $semver =$CLASS->new($v), $CLASS, "new($v)";
-    is "$semver", $v, qq{$v should stringify to "$v""};
     my $str = $v =~ /^v/ ? substr $v, 1 : $v;
+    is "$semver", $str, qq{$v should stringify to "$str"};
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
     ok $v =~ /0\.0\.0/ ? !$semver : !!$semver, "$v should be true";
@@ -75,6 +75,13 @@ for my $bv qw(
 
 # Try a vstring.
 isa_ok $version = $CLASS->new(v2.3.2), $CLASS, 'vstring version';
+is $version->stringify, 'v2.3.2', 'vestring should stringify with "v"';
+is $version->normal, '2.3.2', 'vstring should normalize without "v"';
+
+# Try a shorter vstring.
+isa_ok $version = $CLASS->new(v2.3), $CLASS, 'vstring version';
+is $version->stringify, 'v2.3', 'short vestring should stringify with "v"';
+is $version->normal, '2.3.0', 'short vstring should normalize without required 0';
 
 # Numify should die
 local $@;
