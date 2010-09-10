@@ -28,8 +28,6 @@ my $OPTIONAL_EXTRA_PART = qr/[a-zA-Z][-0-9A-Za-z]*/;
 
 sub new {
     my ($class, $ival) = @_;
-
-    # A vstring has only numbers, so just use it.
     return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
     my ($val, $extra) = (
@@ -47,27 +45,23 @@ $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
 
 sub declare {
     my ($class, $ival) = @_;
-
-    # A vstring has only numbers, so just use it.
     return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
-    my $alpha = $1;
+    my $extra = $1;
     my $self = $class->SUPER::declare($v);
-    $self->{extra} = $alpha;
+    $self->{extra} = $extra;
     return $self;
 }
 
 sub parse {
     my ($class, $ival) = @_;
-
-    # A vstring has only numbers, so just use it.
     return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
-    my $alpha = $1;
+    my $extra = $1;
     my $self = $class->SUPER::parse($v);
-    $self->{extra} = $alpha;
+    $self->{extra} = $extra;
     return $self;
 }
 
@@ -78,8 +72,9 @@ sub stringify {
 
 sub normal   {
     my $self = shift;
-    my $v    = $self->{version};
-    sprintf '%u.%u.%u%s', (map { $_ || 0 }  @{ $v }[0..2]), $self->{extra} || '';
+    (my $norm = $self->SUPER::normal . ($self->{extra} || ''));
+    $norm =~ s/^v//;
+    return $norm;
 }
 
 sub numify   { _die 'Semantic versions cannot be numified'; }
