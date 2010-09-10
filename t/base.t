@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 388;
+use Test::More tests => 425;
 #use Test::More 'no_plan';
 
 my $CLASS;
@@ -198,27 +198,32 @@ for my $spec (
     ['1b',             '1.0.0b'],
     ['9.0beta4',       '9.0.0beta4'],
     ['  012.2.2',      '12.2.2'],
-    ['99999998',  '99999998.0.0'],
+    ['99999998',       '99999998.0.0'],
+    ['1.02_30',        '1.230.0'],
+    [1.02_30,          '1.23.0'],
+    [3.4,              '3.4.0', '3.400.0'],
 ) {
     my $r = $CLASS->new($spec->[1]);
     isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS, $spec->[0];
     (my $string = $spec->[0]) =~ s/^\s+//;
     $string =~ s/\s+$//;
-    $string = "v$string" if $string =~ /^\d+[.][^.]+$/;
-    is $l->stringify, $string, qq{... And it should stringify to "$string"};
-    is $l->normal, $spec->[1], qq{... And it should normalize to "$spec->[1]"};
+    my $vstring = $string =~ /^\d+[.][^.]+$/ ? "v$string" : $string;
+    $vstring =~ s/_//g;
+    is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
+    is $l->normal, $spec->[1],  qq{... And it should normalize to "$spec->[1]"};
 
     # Compare the non-semantic version string to the semantic one.
-    cmp_ok $spec->[0], '==', $r, qq{$r == "$spec->[0]"};
+    cmp_ok $spec->[0], '==', $r, qq{$r == "$spec->[0]"} unless $string =~ /_/;
 
     if ($spec->[0] && $spec->[0] !~ /^[a-z]/ && $spec->[0] !~ /[.]{2}/) {
         my $exp = $spec->[2] || $spec->[1];
         isa_ok $l = version::Semantic->parse($spec->[0]), $CLASS,
             "$spec->[0] should be parseable as a semver";
-        is $l->normal, $exp, "... And it should be normalized to $exp";
+        is $l->stringify, $string, "... And it should stringify to $string";
+        is $l->normal,    $exp   , "... And it should normalize to $exp";
 
         # Try with the parsed version.
         $r = $CLASS->new($spec->[2]) if $spec->[2];
-        cmp_ok $l, '==', $r, qq{$l == $r};
+        cmp_ok $l, '==', $r, qq{$l == $r} unless $string =~ /_/;
     }
 }

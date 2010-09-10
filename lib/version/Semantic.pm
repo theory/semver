@@ -49,6 +49,7 @@ sub declare {
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
     my $extra = $1;
+    $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::declare($v);
     $self->{extra} = $extra;
     return $self;
@@ -72,14 +73,19 @@ sub stringify {
 
 sub normal   {
     my $self = shift;
-    (my $norm = $self->SUPER::normal . ($self->{extra} || ''));
-    $norm =~ s/^v//;
-    return $norm;
+    (my $norm = $self->SUPER::normal) =~ s/^v//;
+    if ($norm =~ s/_//g) {
+        # Seems messed up. Should have three parts and no leading 0s.
+        $norm = do {
+            no warnings;
+            join '.', map { int $_ } ( split /[.]/ => $norm )[0..2];
+        };
+    }
+    return $norm . ($self->{extra} || '');
 }
 
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
-sub is_qv    { 1 }
 
 sub compare {
     my ($left, $right, $rev) = @_;
@@ -206,31 +212,48 @@ more forgiving constructors.
 
   my $semver = version::Semantic->declare('1.2'); # 1.2.0
 
-Similar to L<version>'s C<declare()> constructor, the parts of the version
-string parsed are always considered to be integers. This method will also fill
-in other missing parts.
-
-This constructor uses the most forgiving parser. Consider using it to
-normalize version strings.
+This parser strips out any underscores from the version string and passes it
+to to C<version>'s C<declare> constructor, which always creates dotted-integer
+version objects. This is the most flexible way to declare versions. Consider
+using it to normalize version strings.
 
 =head3 C<parse>
 
   my $semver = version::Semantic->parse('1.2'); # 1.200.0
 
 This parser dispatches to C<version>'s C<parse> constructor, which tries to be
-more flexible in how it converts simple decimal strings. Some examples: Not
-really recommended, but given the sorry history of version strings in Perl,
-it's gotta be there.
+more flexible in how it converts simple decimal strings and numbers. Not
+really recommended, since it's treatment of decimals is quit different from
+the dotted-integer format of semantic version strings, and thus can lead to
+inconsistencies. Included only for proper compatibility with L<version>.
 
 =head2 Instance Methods
 
 =head3 C<normal>
 
-  my $str = $semver->normal;
+  version::Semantic->declare('v1.2')->normal;      # 1.2.0
+  version::Semantic->parse('1.2')->normal;         # 1.200.0
+  version::Semantic->declare('1.02.0b1')->normal;  # 1.2.0b1
+  version::Semantic->parse('1.02_30')->normal      # 1.230.0
+  version::Semantic->parse(1.02_30)->normal        # 1.23.0
 
-Returns a normalized representation of the version string. This string will
-always be a strictly-valid dotted-integer semantic version string suitable for
-passing to C<new()>.
+Returns a normalized representation of the version. This string will always be
+a strictly-valid dotted-integer semantic version string suitable for passing
+to C<new()>. Unlike L<version>'s C<normal> method, there will be no leading
+"v".
+
+=head3 C<stringify>
+
+  version::Semantic->declare('v1.2')->stringify;    # v1.2
+  version::Semantic->parse('1.200')->stringify;     # v1.200
+  version::Semantic->declare('1.2b1')->stringify;   # v1.2b1
+  version::Semantic->parse(1.02_30)->stringify;     # v1.0230
+  version::Semantic->parse(1.02_30)->stringify;     # v1.023
+
+Returns a string that is as close to the original representation as possible.
+If the original representation was a numeric literal, it will be returned the
+way perl would normally represent it in a string. This method is used whenever
+a version object is interpolated into a string.
 
 =head3 C<numify>
 
