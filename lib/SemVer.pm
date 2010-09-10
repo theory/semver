@@ -8,7 +8,7 @@ use Scalar::Util ();
 use overload (
     '""'   => 'stringify',
     '<=>'  => 'compare',
-    'cmp'  => 'compare'
+    'cmp'  => 'compare',
 );
 
 our @ISA = qw(version);
@@ -34,7 +34,7 @@ sub new {
         $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)($OPTIONAL_EXTRA_PART)?$/
     );
     _die qq{Invalid semantic version string format: "$ival"}
-    	unless defined $val;
+        unless defined $val;
 
     my $self = $class->SUPER::new($val);
     $self->{extra} = $extra;
@@ -68,7 +68,6 @@ sub parse {
 
 sub stringify {
     my $self = shift;
-    my $ret = $self->SUPER::stringify;
     return $self->SUPER::stringify . ($self->{extra} || '');
 }
 
