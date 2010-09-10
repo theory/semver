@@ -68,6 +68,7 @@ sub parse {
 
 sub stringify {
     my $self = shift;
+    my $ret = $self->SUPER::stringify;
     return $self->SUPER::stringify . ($self->{extra} || '');
 }
 
@@ -178,16 +179,21 @@ If you need something more flexible, use C<declare()>. And if you need
 something more comparable with what L<version> expects, try C<parse()>.
 Compare how these constructors deal with various version strings:
 
-     String   | new        | declare    | parse
+    Argument  | new        | declare    | parse
  -------------+------------+-------------------------
   '1.0.0'     | 1.0.0      | 1.0.0      | 1.0.0
   '5.5.2b1'   | 5.5.2b1    | 5.5.2b1    | 5.5.2b1
   '1.0'       | <error>    | 1.0.0      | 1.0.0
   '  012.2.2' | <error>    | 12.2.2     | 12.2.2
   '1.1'       | <error>    | 1.1.0      | 1.100.0
+   1.1        | <error>    | 1.1.0      | 1.100.0
   '1.1b1'     | <error>    | 1.1.0b1    | 1.100.0b1
   '1.2.b1'    | <error>    | 1.2.0b1    | 1.2.0b1
   '9.0beta4'  | <error>    | 9.0.0beta4 | 9.0.0beta4
+  '9'         | <error>    | 9.0.0      | 9.0.0
+  '1b'        | <error>    | 1.0.0b     | 1.0.0b
+   0          | <error>    | 0.0.0      | 0.0.0
+  '0rc1'      | <error>    | 0.0.0rc1   | 0.0.0rc1
 
 As with L<version> objects, the comparison and stringification operators are
 all overloaded, so that you can compare semantic versions. You can also

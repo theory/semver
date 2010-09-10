@@ -2,8 +2,8 @@
 
 use strict;
 use warnings;
-use Test::More tests => 425;
-#use Test::More 'no_plan';
+#use Test::More tests => 425;
+use Test::More 'no_plan';
 
 my $CLASS;
 BEGIN {
@@ -193,6 +193,7 @@ for my $spec (
     ['1.02.02rc1',     '1.2.2rc1'],
     ['1.0',            '1.0.0'],
     ['1.1',            '1.1.0',   '1.100.0'],
+    [ 1.1,             '1.1.0',   '1.100.0'],
     ['1.1b1',          '1.1.0b1', '1.100.0b1'],
     ['1.2.b1',         '1.2.0b1'],
     ['1b',             '1.0.0b'],
@@ -202,10 +203,20 @@ for my $spec (
     ['1.02_30',        '1.230.0'],
     [1.02_30,          '1.23.0'],
     [3.4,              '3.4.0', '3.400.0'],
+    [3.04,             '3.4.0', '3.40.0' ],
+    ['3.04',           '3.4.0', '3.40.0' ],
+    [v3.4,             '3.4.0' ],
+    [9,                '9.0.0' ],
+    ['9',              '9.0.0' ],
+    ['0',              '0.0.0' ],
+    [0,                '0.0.0' ],
+    ['0rc1',           '0.0.0rc1' ],
 ) {
     my $r = $CLASS->new($spec->[1]);
-    isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS, $spec->[0];
-    (my $string = $spec->[0]) =~ s/^\s+//;
+    isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS, "Declared $spec->[0]";
+    my $string = Scalar::Util::isvstring($spec->[0])
+        ? join '.', map { ord } split // => $spec->[0] : $spec->[0];
+    $string =~ s/^\s+//;
     $string =~ s/\s+$//;
     my $vstring = $string =~ /^\d+[.][^.]+$/ ? "v$string" : $string;
     $vstring =~ s/_//g;
@@ -217,8 +228,8 @@ for my $spec (
 
     if ($spec->[0] && $spec->[0] !~ /^[a-z]/ && $spec->[0] !~ /[.]{2}/) {
         my $exp = $spec->[2] || $spec->[1];
-        isa_ok $l = version::Semantic->parse($spec->[0]), $CLASS,
-            "$spec->[0] should be parseable as a semver";
+        isa_ok $l = version::Semantic->parse($spec->[0]), $CLASS, "Parsed $spec->[0]";
+        $string = "v$string" if Scalar::Util::isvstring($spec->[0]);
         is $l->stringify, $string, "... And it should stringify to $string";
         is $l->normal,    $exp   , "... And it should normalize to $exp";
 
