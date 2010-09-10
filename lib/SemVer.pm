@@ -28,7 +28,16 @@ my $OPTIONAL_EXTRA_PART = qr/[a-zA-Z][-0-9A-Za-z]*/;
 
 sub new {
     my ($class, $ival) = @_;
+
+    # Handle vstring.
     return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
+
+    # Let version handle cloning.
+    if (eval { $ival->isa('version') }) {
+        my $self = $class->SUPER::new($ival);
+        $self->{extra} = $ival->{extra};
+        return $self;
+    }
 
     my ($val, $extra) = (
         $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)($OPTIONAL_EXTRA_PART)?$/
@@ -45,7 +54,8 @@ $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
 
 sub declare {
     my ($class, $ival) = @_;
-    return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
+    return $class->new($ival) if Scalar::Util::isvstring($ival)
+        or eval { $ival->isa('version') };
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
     my $extra = $1;
@@ -57,7 +67,8 @@ sub declare {
 
 sub parse {
     my ($class, $ival) = @_;
-    return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
+    return $class->new($ival) if Scalar::Util::isvstring($ival)
+        or eval { $ival->isa('version') };
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
     my $extra = $1;
@@ -88,22 +99,11 @@ sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
 
 sub compare {
-    my ($left, $right, $rev) = @_;
-
-    unless (eval { $right->isa(__PACKAGE__) }) {
-        if (eval { $right->isa('version') }) {
-            # Re-parse from the base class.
-            $right = ref($left)->new($right->normal);
-        } else {
-            # try to bless $right into our class
-            local $@;
-            $right = eval { ref($left)->declare($right) };
-            return -1 if $@;
-        }
-    }
+    my $left  = shift;
+    my $right = ref($left)->declare(shift);
 
     # Reverse?
-    ($left, $right) = $rev? ($right, $left): ($left, $right);
+    ($left, $right) = shift() ? ($right, $left): ($left, $right);
 
     # Major and minor win.
     if (my $ret = $left->vcmp($right, 0)) {

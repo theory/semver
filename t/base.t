@@ -2,8 +2,8 @@
 
 use strict;
 use warnings;
-use Test::More tests => 490;
-#use Test::More 'no_plan';
+#use Test::More tests => 490;
+use Test::More 'no_plan';
 
 my $CLASS;
 BEGIN {
@@ -83,6 +83,17 @@ is $version->normal, '2.3.2', 'vstring should normalize without "v"';
 isa_ok $version = $CLASS->new(v2.3), $CLASS, 'vstring version';
 is $version->stringify, 'v2.3', 'short vestring should stringify with "v"';
 is $version->normal, '2.3.0', 'short vstring should normalize without required 0';
+
+# Try another SemVer.
+isa_ok my $cloned = $CLASS->new($version), $CLASS, 'Cloned SemVer';
+is $cloned->stringify, $version->stringify, 'Cloned stringify like original';
+is $cloned->normal, $version->normal, 'Cloned should normalize like original';
+
+# Try a SemVer with alpha.
+isa_ok $version = $CLASS->new('2.3.2b1'), $CLASS, 'new version';
+isa_ok $cloned = $CLASS->new($version), $CLASS, 'Second cloned SemVer';
+is $cloned->stringify, $version->stringify, 'Second cloned stringify like original';
+is $cloned->normal, $version->normal, 'Second cloned should normalize like original';
 
 # Numify should die
 local $@;
@@ -237,5 +248,13 @@ for my $spec (
         # Try with the parsed version.
         $r = $CLASS->new($spec->[2]) if $spec->[2];
         cmp_ok $l, '==', $r, qq{$l == $r} unless $string =~ /_/;
+    }
+
+    # Try creating as a version object and cloning.
+    if ($spec->[0] !~ /[a-z]/i) {
+        isa_ok my $v = version->parse($spec->[0]), 'version', "base version $spec->[0]";
+            isa_ok my $sv = SemVer->new($v), 'SemVer', "SemVer from base version $spec->[0]";
+            is $sv->stringify, $string, qq{... And it should stringify to "$vstring"};
+            is $sv->normal, $l->normal, '... And it should normalize to "' . $l->normal . '"';
     }
 }
