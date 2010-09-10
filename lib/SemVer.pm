@@ -315,6 +315,11 @@ clone L<git://github.com/theory/semver.git> and send patches!
 Found a bug? Please L<post|http://github.com/theory/semver/issues> or
 L<email|mailto:bug-semver@rt.cpan.org> a report!
 
+=head1 Acknowledgements
+
+Many thanks to L<version> author John Peacock for his suggestions and
+debugging help.
+
 =head1 Authors
 
 David E. Wheeler <david@kineticode.com>

@@ -1,4 +1,5 @@
 Revision history for Perl extension SemVer.
 
 0.1.0  
-      - Initial version.
+      - Initial version, created with lots of help and feedback from
+        version.pm author John Peacock
