@@ -2,8 +2,8 @@
 
 use strict;
 use warnings;
-use Test::More tests => 400;
-# use Test::More 'no_plan';
+use Test::More tests => 388;
+#use Test::More 'no_plan';
 
 my $CLASS;
 BEGIN {
@@ -192,25 +192,21 @@ for my $spec (
     ['1.2.02beta-3  ', '1.2.2beta-3'],
     ['1.02.02rc1',     '1.2.2rc1'],
     ['1.0',            '1.0.0'],
-    ['.0.02',          '0.0.2'],
-    ['1..02',          '1.0.2'],
-    ['1..',            '1.0.0'],
     ['1.1',            '1.1.0',   '1.100.0'],
     ['1.1b1',          '1.1.0b1', '1.100.0b1'],
     ['1.2.b1',         '1.2.0b1'],
     ['1b',             '1.0.0b'],
     ['9.0beta4',       '9.0.0beta4'],
-    ['9b',             '9.0.0b'],
-    ['rc1',            '0.0.0rc1'],
-    ['',               '0.0.0'],
-    ['..2',            '0.0.2'],
     ['  012.2.2',      '12.2.2'],
     ['99999998',  '99999998.0.0'],
 ) {
     my $r = $CLASS->new($spec->[1]);
-    isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS,
-        "$spec->[0] should be declarable as a semver";
-    is $l->normal, $spec->[1], "... And it should be normalized to $spec->[1]";
+    isa_ok my $l = version::Semantic->declare($spec->[0]), $CLASS, $spec->[0];
+    (my $string = $spec->[0]) =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    $string = "v$string" if $string =~ /^\d+[.][^.]+$/;
+    is $l->stringify, $string, qq{... And it should stringify to "$string"};
+    is $l->normal, $spec->[1], qq{... And it should normalize to "$spec->[1]"};
 
     # Compare the non-semantic version string to the semantic one.
     cmp_ok $spec->[0], '==', $r, qq{$r == "$spec->[0]"};

@@ -1,6 +1,6 @@
 package version::Semantic;
 
-use 5.10.0;
+use 5.8.1;
 use strict;
 use version 0.82;
 use Scalar::Util ();
@@ -14,29 +14,17 @@ use overload (
 our @ISA = qw(version);
 our $VERSION = '0.1.0'; # For Module::Build
 
-sub _die {
-    require Carp;
-    Carp::croak(@_);
-}
+sub _die { require Carp; Carp::croak(@_) }
 
+# Prevent version.pm from mucking with our internals.
 sub import {}
 
+# Borrowed from version.pm.
 my $STRICT_INTEGER_PART = qr/0|[1-9][0-9]*/;
 my $STRICT_DOTTED_INTEGER_PART = qr/\.[0-9]+/;
 my $STRICT_DOTTED_INTEGER_VERSION =
     qr/ $STRICT_INTEGER_PART $STRICT_DOTTED_INTEGER_PART{2,} /x;
 my $OPTIONAL_EXTRA_PART = qr/[a-zA-Z][-0-9A-Za-z]*/;
-
-sub _new {
-    my $class = shift;
-    $class = ref $class || $class;
-
-    return bless {
-        original => shift,
-        qv       => 1,
-        version  => shift,
-    } => $class;
-}
 
 sub new {
     my ($class, $ival) = @_;
@@ -63,18 +51,10 @@ sub declare {
     # A vstring has only numbers, so just use it.
     return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
-    my @parts = split /[.]/ => $ival;
-    $parts[0] =~ s/^v// if $parts[0];
-    my @ret = do {
-        no warnings;
-        map { int $parts[$_] } 0..2;
-    };
-
-    my $self = $class->SUPER::new(join '.', @ret);
-    if ($ival =~ /([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$/) {
-        push @ret, $self->{extra} = $1;
-    }
-
+    (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
+    my $alpha = $1;
+    my $self = $class->SUPER::declare($v);
+    $self->{extra} = $alpha;
     return $self;
 }
 
@@ -84,7 +64,7 @@ sub parse {
     # A vstring has only numbers, so just use it.
     return $class->SUPER::new($ival) if Scalar::Util::isvstring($ival);
 
-    (my $v = $ival) =~ s/([a-zA-Z][-0-9A-Za-z]*)[[:space:]]*$//;
+    (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
     my $alpha = $1;
     my $self = $class->SUPER::parse($v);
     $self->{extra} = $alpha;
@@ -92,7 +72,7 @@ sub parse {
 }
 
 sub stringify {
-    my $self   = shift;
+    my $self = shift;
     return $self->SUPER::stringify . ($self->{extra} || '');
 }
 
@@ -202,15 +182,10 @@ Compare how these constructors deal with various version strings:
   '1.0.0'     | 1.0.0      | 1.0.0      | 1.0.0
   '5.5.2b1'   | 5.5.2b1    | 5.5.2b1    | 5.5.2b1
   '1.0'       | <error>    | 1.0.0      | 1.0.0
-  '.0.02'     | <error>    | 0.0.2      | 0.0.2
-  '1..'       | <error>    | 1.0.0      | <error>
-  'rc1'       | <error>    | 0.0.0rc1   | <error>
-  ''          | <error>    | 0.0.0      | <error>
   '  012.2.2' | <error>    | 12.2.2     | 12.2.2
   '1.1'       | <error>    | 1.1.0      | 1.100.0
   '1.1b1'     | <error>    | 1.1.0b1    | 1.100.0b1
   '1.2.b1'    | <error>    | 1.2.0b1    | 1.2.0b1
-  '1b'        | <error>    | 1.0.0b     | 1.0.0b
   '9.0beta4'  | <error>    | 9.0.0beta4 | 9.0.0beta4
 
 As with L<version> objects, the comparison and stringification operators are
