@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 573;
+use Test::More tests => 575;
 #use Test::More 'no_plan';
 
 my $CLASS;
@@ -212,7 +212,7 @@ for my $spec (
     ['9.0beta4',       '9.0.0beta4'],
     ['  012.2.2',      '12.2.2'],
     ['99999998',       '99999998.0.0'],
-    ['1.02_30',        '1.230.0'],
+    ['1.02_30',        '1.23.0'],
     [1.02_30,          '1.23.0'],
     [3.4,              '3.4.0', '3.400.0'],
     [3.04,             '3.4.0', '3.40.0' ],
@@ -230,20 +230,21 @@ for my $spec (
         ? join '.', map { ord } split // => $spec->[0] : $spec->[0];
     $string =~ s/^\s+//;
     $string =~ s/\s+$//;
+    $string += 0 if $string =~ s/_//g;
     my $vstring = $string =~ /^\d+[.][^.]+$/ ? "v$string" : $string;
-    $vstring =~ s/_//g;
     is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
     is $l->normal, $spec->[1],  qq{... And it should normalize to "$spec->[1]"};
 
     # Compare the non-semantic version string to the semantic one.
-    cmp_ok $spec->[0], '==', $r, qq{$r == "$spec->[0]"} unless $string =~ /_/;
+    cmp_ok $spec->[0], '==', $r, qq{$r == "$spec->[0]"};
 
     if ($spec->[0] && $spec->[0] !~ /^[a-z]/ && $spec->[0] !~ /[.]{2}/) {
         my $exp = $spec->[2] || $spec->[1];
         isa_ok $l = SemVer->parse($spec->[0]), $CLASS, "Parsed $spec->[0]";
         $string = "v$string" if Scalar::Util::isvstring($spec->[0]);
+        $string =~ s/_//;
         is $l->stringify, $string, "... And it should stringify to $string";
-        is $l->normal,    $exp   , "... And it should normalize to $exp";
+        is $l->normal,    $exp,    "... And it should normalize to $exp";
 
         # Try with the parsed version.
         $r = $CLASS->new($spec->[2]) if $spec->[2];
@@ -253,8 +254,8 @@ for my $spec (
     # Try creating as a version object and cloning.
     if ($spec->[0] !~ /[a-z]/i) {
         isa_ok my $v = version->parse($spec->[0]), 'version', "base version $spec->[0]";
-            isa_ok my $sv = SemVer->new($v), 'SemVer', "SemVer from base version $spec->[0]";
-            is $sv->stringify, $string, qq{... And it should stringify to "$vstring"};
-            is $sv->normal, $l->normal, '... And it should normalize to "' . $l->normal . '"';
+        isa_ok my $sv = SemVer->new($v), 'SemVer', "SemVer from base version $spec->[0]";
+        is $sv->stringify, $string, qq{... And it should stringify to "$vstring"};
+        is $sv->normal, $l->normal, '... And it should normalize to "' . $l->normal . '"';
     }
 }
