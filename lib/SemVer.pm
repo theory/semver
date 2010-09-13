@@ -81,7 +81,7 @@ sub parse {
 sub stringify {
     my $self = shift;
     my $str = $self->SUPER::stringify;
-    # Deal with cloned version.
+    # This is purely for SemVers constructed from version objects.
     $str += 0 if $str =~ s/_//g; # ignore underscores.
     return $str . ($self->{extra} || '');
 }
