@@ -308,9 +308,10 @@ If that's not what you want, pass the string to C<parse> first:
 
 =head1 Support
 
-This module is managed in an open GitHub repository,
-L<http://github.com/theory/semver/>. Feel free to fork and contribute, or to
-clone L<git://github.com/theory/semver.git> and send patches!
+This module is managed in an open
+L<GitHub repository|http://github.com/theory/semver/>. Feel free to fork and
+contribute, or to clone L<git://github.com/theory/semver.git> and send
+patches!
 
 Found a bug? Please L<post|http://github.com/theory/semver/issues> or
 L<email|mailto:bug-semver@rt.cpan.org> a report!
