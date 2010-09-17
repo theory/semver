@@ -1,6 +1,8 @@
 Revision history for Perl extension SemVer.
 
 0.2.0
+      - Require Test::Pod 1.41 for testing POD because it supports
+        `L<text|url>`.
 
 0.1.0  2010-09-16T19:07:04
       - Initial version, created with lots of help and feedback from
