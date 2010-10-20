@@ -12,7 +12,7 @@ use overload (
 );
 
 our @ISA = qw(version);
-our $VERSION = '0.1.0'; # For Module::Build
+our $VERSION = '0.2.0'; # For Module::Build
 
 sub _die { require Carp; Carp::croak(@_) }
 

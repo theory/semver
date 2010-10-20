@@ -16,6 +16,10 @@ Module::Build->new(
         'version' => 0.82,
         'perl'    => 5.008001,
     },
+    recommends         => {
+        'Test::Pod'           => '1.41',
+        'Test::Pod::Coverage' => '1.06',
+    },
     meta_merge         => {
         resources => {
             homepage    => 'http://search.cpan.org/dist/SemVer/',

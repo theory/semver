@@ -1,5 +1,5 @@
-SemVer version 0.1.0
-===============================
+SemVer version 0.2.0
+====================
 
 This module subclasses [`version`] to create semantic versions, as defined by
 the [Semantic Versioning Specification]. The two salient points of the
