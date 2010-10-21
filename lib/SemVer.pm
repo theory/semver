@@ -59,7 +59,7 @@ sub declare {
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
     my $extra = $1;
-    $v =~ s/_//g; # ignore underscores.
+    $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::declare($v);
     $self->{extra} = $extra;
     return $self;
@@ -72,6 +72,7 @@ sub parse {
 
     (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
     my $extra = $1;
+    $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::parse($v);
     $self->{extra} = $extra;
     return $self;
@@ -79,19 +80,16 @@ sub parse {
 
 sub stringify {
     my $self = shift;
-    return $self->SUPER::stringify . ($self->{extra} || '');
+    my $str = $self->SUPER::stringify;
+    # This is purely for SemVers constructed from version objects.
+    $str += 0 if $str =~ s/_//g; # ignore underscores.
+    return $str . ($self->{extra} || '');
 }
 
 sub normal   {
     my $self = shift;
     (my $norm = $self->SUPER::normal) =~ s/^v//;
-    if ($norm =~ s/_//g) {
-        # Seems messed up. Should have three parts and no leading 0s.
-        $norm = do {
-            no warnings;
-            join '.', map { int $_ } ( split /[.]/ => $norm )[0..2];
-        };
-    }
+    $norm =~ s/_/./g;
     return $norm . ($self->{extra} || '');
 }
 
@@ -165,21 +163,28 @@ If you need something more flexible, use C<declare()>. And if you need
 something more comparable with what L<version> expects, try C<parse()>.
 Compare how these constructors deal with various version strings:
 
-    Argument  | new        | declare    | parse
- -------------+------------+-------------------------
-  '1.0.0'     | 1.0.0      | 1.0.0      | 1.0.0
-  '5.5.2b1'   | 5.5.2b1    | 5.5.2b1    | 5.5.2b1
-  '1.0'       | <error>    | 1.0.0      | 1.0.0
-  '  012.2.2' | <error>    | 12.2.2     | 12.2.2
-  '1.1'       | <error>    | 1.1.0      | 1.100.0
-   1.1        | <error>    | 1.1.0      | 1.100.0
-  '1.1b1'     | <error>    | 1.1.0b1    | 1.100.0b1
-  '1.2.b1'    | <error>    | 1.2.0b1    | 1.2.0b1
-  '9.0beta4'  | <error>    | 9.0.0beta4 | 9.0.0beta4
-  '9'         | <error>    | 9.0.0      | 9.0.0
-  '1b'        | <error>    | 1.0.0b     | 1.0.0b
-   0          | <error>    | 0.0.0      | 0.0.0
-  '0rc1'      | <error>    | 0.0.0rc1   | 0.0.0rc1
+    Argument  | new     | declare    | parse
+ -------------+---- ----+-------------------------
+  '1.0.0'     | 1.0.0   | 1.0.0      | 1.0.0
+  '5.5.2b1'   | 5.5.2b1 | 5.5.2b1    | 5.5.2b1
+  '1.0'       | <error> | 1.0.0      | 1.0.0
+  '  012.2.2' | <error> | 12.2.2     | 12.2.2
+  '1.1'       | <error> | 1.1.0      | 1.100.0
+   1.1        | <error> | 1.1.0      | 1.100.0
+  '1.1b1'     | <error> | 1.1.0b1    | 1.100.0b1
+  '1.2.b1'    | <error> | 1.2.0b1    | 1.2.0b1
+  '9.0beta4'  | <error> | 9.0.0beta4 | 9.0.0beta4
+  '9'         | <error> | 9.0.0      | 9.0.0
+  '1b'        | <error> | 1.0.0b     | 1.0.0b
+   0          | <error> | 0.0.0      | 0.0.0
+  '0rc1'      | <error> | 0.0.0rc1   | 0.0.0rc1
+  '1.02_30'   | <error> | 1.23.0     | 1.23.0
+   1.02_30    | <error> | 1.23.0     | 1.23.0
+
+Note that, unlike in L<version>, the C<declare> and C<parse> methods ignore
+underscores. That is, version strings with underscores are treated as decimal
+numbers. Hence, the last two examples yield exactly the same semantic
+versions.
 
 As with L<version> objects, the comparison and stringification operators are
 all overloaded, so that you can compare semantic versions. You can also
