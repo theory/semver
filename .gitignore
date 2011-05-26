@@ -7,6 +7,6 @@ Build
 _build
 cover_db/
 SemVer-*
-META.yml
-MYMETA.yml
+/META.*
+MYMETA.*
 MANIFEST
