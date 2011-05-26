@@ -3,6 +3,8 @@ Revision history for Perl extension SemVer.
 0.3.0
       - Made leading zeros, such as the "04" in "1.04.3" illegal when parsing
         via `new()`.
+      - Eliminted "Use of qw(...) as parentheses is deprecated" in the tests
+        when running on Perl 5.14.
 
 0.2.0 2010-09-17T17:59:57
       - Require Test::Pod 1.41 for testing POD because it supports

@@ -26,7 +26,7 @@ can_ok $CLASS, qw(
 isa_ok my $version = $CLASS->new('0.1.0'), $CLASS, 'An instance';
 isa_ok $SemVer::VERSION, $CLASS, q{SemVer's own $VERSION};
 
-for my $v qw(
+for my $v (qw(
     1.2.2
     0.2.2
     1.2.2
@@ -39,7 +39,7 @@ for my $v qw(
     0.0.0rc1
     v1.2.2
     999993333.0.0
-) {
+)) {
     isa_ok my $semver =$CLASS->new($v), $CLASS, "new($v)";
     my $str = $v =~ /^v/ ? substr $v, 1 : $v;
     is "$semver", $str, qq{$v should stringify to "$str"};
@@ -60,7 +60,7 @@ local $@;
 eval { $CLASS->new('') };
 ok $@, 'Empty string should be an invalid version';
 
-for my $bv qw(
+for my $bv (qw(
     1.2
     0
     0.0
@@ -68,7 +68,7 @@ for my $bv qw(
     1.b
     1.04.0
     1.65.r2
-) {
+)) {
     local $@;
     eval { $CLASS->new($bv) };
     like $@, qr{Invalid semantic version string format: "$bv"},
@@ -173,21 +173,21 @@ for my $spec (
 
 # Compare to version objects.
 my $semver = $CLASS->new('1.2.0');
-for my $v qw(
+for my $v (qw(
     1.002
     1.2.0
     v1.002
     v1.2.0
-) {
+)) {
     my $version = version->new($v);
     ok $semver == $version, "$semver == $version";
 }
 
 # Compare to strings.
-for my $v qw(
+for my $v (qw(
     1.2.0
     v1.2.0
-) {
+)) {
     my $semver = $CLASS->new($v);
     cmp_ok $semver, '==', $v, qq{$semver == "$v"};
     cmp_ok $v, '==', $semver, qq{"$v" == $semver};
