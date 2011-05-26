@@ -1,6 +1,6 @@
 Revision history for Perl extension SemVer.
 
-0.3.0
+0.3.0 2011-05-26T04:54:50
       - Made leading zeros, such as the "04" in "1.04.3" illegal when parsing
         via `new()`.
       - Eliminted "Use of qw(...) as parentheses is deprecated" in the tests
