@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 575;
+use Test::More tests => 576;
 #use Test::More 'no_plan';
 
 my $CLASS;
@@ -66,6 +66,7 @@ for my $bv qw(
     0.0
     1.2b
     1.b
+    1.04.0
     1.65.r2
 ) {
     local $@;

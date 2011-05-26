@@ -19,9 +19,9 @@ sub _die { require Carp; Carp::croak(@_) }
 # Prevent version.pm from mucking with our internals.
 sub import {}
 
-# Borrowed from version.pm.
+# Adapted from version.pm.
 my $STRICT_INTEGER_PART = qr/0|[1-9][0-9]*/;
-my $STRICT_DOTTED_INTEGER_PART = qr/\.[0-9]+/;
+my $STRICT_DOTTED_INTEGER_PART = qr/\.$STRICT_INTEGER_PART/;
 my $STRICT_DOTTED_INTEGER_VERSION =
     qr/ $STRICT_INTEGER_PART $STRICT_DOTTED_INTEGER_PART{2,} /x;
 my $OPTIONAL_EXTRA_PART = qr/[a-zA-Z][-0-9A-Za-z]*/;
@@ -167,6 +167,7 @@ Compare how these constructors deal with various version strings:
  -------------+---- ----+-------------------------
   '1.0.0'     | 1.0.0   | 1.0.0      | 1.0.0
   '5.5.2b1'   | 5.5.2b1 | 5.5.2b1    | 5.5.2b1
+  '1.05.0'    | <error> | 1.5.0      | 1.5.0
   '1.0'       | <error> | 1.0.0      | 1.0.0
   '  012.2.2' | <error> | 12.2.2     | 12.2.2
   '1.1'       | <error> | 1.1.0      | 1.100.0
