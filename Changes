@@ -1,6 +1,10 @@
 Revision history for Perl extension SemVer.
 
 0.4.0
+      - Updated the parsers to support an optional dash before the prerelease
+        version, and `normal()` to always emit a dash for the prerelease
+        version. This brings it in line with the final semver 1.0.0
+        specification.
 
 0.3.0 2011-05-26T04:54:50
       - Made leading zeros, such as the "04" in "1.04.3" illegal when parsing

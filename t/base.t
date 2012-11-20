@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 576;
+use Test::More tests => 594;
 #use Test::More 'no_plan';
 
 my $CLASS;
@@ -37,19 +37,21 @@ for my $v (qw(
     1.0.0beta2
     1.0.0
     0.0.0rc1
+    0.0.0-rc1
     v1.2.2
     999993333.0.0
 )) {
     isa_ok my $semver =$CLASS->new($v), $CLASS, "new($v)";
     my $str = $v =~ /^v/ ? substr $v, 1 : $v;
     is "$semver", $str, qq{$v should stringify to "$str"};
+    $str =~ s/(\d)([a-z].+)$/$1-$2/;
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
     ok $v =~ /0\.0\.0/ ? !$semver : !!$semver, "$v should be true";
     ok $semver->is_qv, "$v should be dotted-decimal";
 
     my $is_alpha = $semver->is_alpha;
-    if ($v =~ /[.]\d+[a-z]/) {
+    if ($v =~ /[.]\d+-?[a-z]/) {
         ok $is_alpha, "$v should be alpha";
     } else {
         ok !$is_alpha, "$v should not be alpha";
@@ -201,16 +203,17 @@ for my $spec (
     ['01.2.2',         '1.2.2'],
     ['1.02.2',         '1.2.2'],
     ['1.2.02',         '1.2.2'],
-    ['1.2.02b',        '1.2.2b'],
-    ['1.2.02beta-3  ', '1.2.2beta-3'],
-    ['1.02.02rc1',     '1.2.2rc1'],
+    ['1.2.02b',        '1.2.2-b'],
+    ['1.2.02beta-3  ', '1.2.2-beta-3'],
+    ['1.02.02rc1',     '1.2.2-rc1'],
     ['1.0',            '1.0.0'],
     ['1.1',            '1.1.0',   '1.100.0'],
     [ 1.1,             '1.1.0',   '1.100.0'],
-    ['1.1b1',          '1.1.0b1', '1.100.0b1'],
-    ['1.2.b1',         '1.2.0b1'],
-    ['1b',             '1.0.0b'],
-    ['9.0beta4',       '9.0.0beta4'],
+    ['1.1b1',          '1.1.0-b1', '1.100.0-b1'],
+    ['1.2.',           '1.2.0'],
+    ['1.2.b1',         '1.2.0-b1'],
+    ['1b',             '1.0.0-b'],
+    ['9.0beta4',       '9.0.0-beta4'],
     ['  012.2.2',      '12.2.2'],
     ['99999998',       '99999998.0.0'],
     ['1.02_30',        '1.23.0'],
@@ -223,7 +226,7 @@ for my $spec (
     ['9',              '9.0.0' ],
     ['0',              '0.0.0' ],
     [0,                '0.0.0' ],
-    ['0rc1',           '0.0.0rc1' ],
+    ['0rc1',           '0.0.0-rc1' ],
 ) {
     my $r = $CLASS->new($spec->[1]);
     isa_ok my $l = SemVer->declare($spec->[0]), $CLASS, "Declared $spec->[0]";

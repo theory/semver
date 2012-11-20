@@ -39,13 +39,14 @@ sub new {
         return $self;
     }
 
-    my ($val, $extra) = (
-        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)($OPTIONAL_EXTRA_PART)?$/
+    my ($val, $dash, $extra) = (
+        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)(?:(-?)($OPTIONAL_EXTRA_PART))?$/
     );
     _die qq{Invalid semantic version string format: "$ival"}
         unless defined $val;
 
     my $self = $class->SUPER::new($val);
+    $self->{dash}  = $dash;
     $self->{extra} = $extra;
     return $self;
 }
@@ -57,10 +58,12 @@ sub declare {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
-    my $extra = $1;
+    (my $v = $ival) =~ s/(?:(-?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    my $dash  = $1;
+    my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::declare($v);
+    $self->{dash}  = $dash;
     $self->{extra} = $extra;
     return $self;
 }
@@ -70,10 +73,12 @@ sub parse {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/($OPTIONAL_EXTRA_PART*)[[:space:]]*$//;
-    my $extra = $1;
+    (my $v = $ival) =~ s/(?:(-?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    my $dash  = $1;
+    my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::parse($v);
+    $self->{dash}  = $dash;
     $self->{extra} = $extra;
     return $self;
 }
@@ -83,14 +88,14 @@ sub stringify {
     my $str = $self->SUPER::stringify;
     # This is purely for SemVers constructed from version objects.
     $str += 0 if $str =~ s/_//g; # ignore underscores.
-    return $str . ($self->{extra} || '');
+    return $str . ($self->{dash} || '') . ($self->{extra} || '');
 }
 
 sub normal   {
     my $self = shift;
     (my $norm = $self->SUPER::normal) =~ s/^v//;
     $norm =~ s/_/./g;
-    return $norm . ($self->{extra} || '');
+    return $norm . ($self->{extra} ? "-$self->{extra}" : '');
 }
 
 sub numify   { _die 'Semantic versions cannot be numified'; }
@@ -131,9 +136,9 @@ SemVer - Use semantic version numbers
 =head1 Description
 
 This module subclasses L<version> to create semantic versions, as defined by
-the L<Semantic Versioning Specification (SemVer)|http://semver.org/>. The two
-salient points of the specification, for the purposes of version formatting,
-are:
+the L<Semantic Versioning 1.0.0 Specification|http://semver.org/spec/v1.0.0.html>.
+The two salient points of the specification, for the purposes of version
+formatting, are:
 
 =over
 
@@ -141,18 +146,17 @@ are:
 
 A normal version number MUST take the form X.Y.Z where X, Y, and Z are
 integers. X is the major version, Y is the minor version, and Z is the patch
-version. Each element MUST increase numerically. For instance: 1.9.0 E<lt>
-1.10.0 E<lt> 1.11.0.
+version. Each element MUST increase numerically by increments of one. For
+instance: C<< 1.9.0 < 1.10.0 < 1.11.0 >>.
 
 =item 2.
 
-A special version number MAY be denoted by appending an arbitrary string
-immediately following the patch version. The string MUST be comprised of only
-alphanumerics plus dash (C</0-9A-Za-z-/>) and MUST begin with an alpha
-character (C</A-Za-z/>). Special versions satisfy but have a lower precedence
-than the associated normal version. Precedence B<should> be determined by
-lexicographic ASCII sort order. For instance: 1.0.0beta1 E<lt> 1.0.0beta2
-E<lt> 1.0.0.
+A pre-release version number MAY be denoted by appending an arbitrary string
+immediately following the patch version and a dash. The string MUST be
+comprised of only alphanumerics plus dash C<[0-9A-Za-z-]>. Pre-release
+versions satisfy but have a lower precedence than the associated normal
+version. Precedence SHOULD be determined by lexicographic ASCII sort order. For
+instance: C<< 1.0.0-alpha1 < 1.0.0-beta1 < 1.0.0-beta2 < 1.0.0-rc1 < 1.0.0 >>.
 
 =back
 
@@ -163,24 +167,24 @@ If you need something more flexible, use C<declare()>. And if you need
 something more comparable with what L<version> expects, try C<parse()>.
 Compare how these constructors deal with various version strings:
 
-    Argument  | new     | declare    | parse
- -------------+---- ----+-------------------------
-  '1.0.0'     | 1.0.0   | 1.0.0      | 1.0.0
-  '5.5.2b1'   | 5.5.2b1 | 5.5.2b1    | 5.5.2b1
-  '1.05.0'    | <error> | 1.5.0      | 1.5.0
-  '1.0'       | <error> | 1.0.0      | 1.0.0
-  '  012.2.2' | <error> | 12.2.2     | 12.2.2
-  '1.1'       | <error> | 1.1.0      | 1.100.0
-   1.1        | <error> | 1.1.0      | 1.100.0
-  '1.1b1'     | <error> | 1.1.0b1    | 1.100.0b1
-  '1.2.b1'    | <error> | 1.2.0b1    | 1.2.0b1
-  '9.0beta4'  | <error> | 9.0.0beta4 | 9.0.0beta4
-  '9'         | <error> | 9.0.0      | 9.0.0
-  '1b'        | <error> | 1.0.0b     | 1.0.0b
-   0          | <error> | 0.0.0      | 0.0.0
-  '0rc1'      | <error> | 0.0.0rc1   | 0.0.0rc1
-  '1.02_30'   | <error> | 1.23.0     | 1.23.0
-   1.02_30    | <error> | 1.23.0     | 1.23.0
+    Argument  | new      | declare     | parse
+ -------------+----------+---------------------------
+  '1.0.0'     | 1.0.0    | 1.0.0       | 1.0.0
+  '5.5.2-b1'  | 5.5.2-b1 | 5.5.2-b1    | 5.5.2-b1
+  '1.05.0'    | <error>  | 1.5.0       | 1.5.0
+  '1.0'       | <error>  | 1.0.0       | 1.0.0
+  '  012.2.2' | <error>  | 12.2.2      | 12.2.2
+  '1.1'       | <error>  | 1.1.0       | 1.100.0
+   1.1        | <error>  | 1.1.0       | 1.100.0
+  '1.1-b1'    | <error>  | 1.1.0-b1    | 1.100.0-b1
+  '1.2.b1'    | <error>  | 1.2.0-b1    | 1.2.0-b1
+  '9.0-beta4' | <error>  | 9.0.0-beta4 | 9.0.0-beta4
+  '9'         | <error>  | 9.0.0       | 9.0.0
+  '1-b'       | <error>  | 1.0.0-b     | 1.0.0-b
+   0          | <error>  | 0.0.0       | 0.0.0
+  '0-rc1'     | <error>  | 0.0.0-rc1   | 0.0.0-rc1
+  '1.02_30'   | <error>  | 1.23.0      | 1.23.0
+   1.02_30    | <error>  | 1.23.0      | 1.23.0
 
 Note that, unlike in L<version>, the C<declare> and C<parse> methods ignore
 underscores. That is, version strings with underscores are treated as decimal
@@ -221,7 +225,7 @@ using it to normalize version strings.
 
 This parser dispatches to C<version>'s C<parse> constructor, which tries to be
 more flexible in how it converts simple decimal strings and numbers. Not
-really recommended, since it's treatment of decimals is quit different from
+really recommended, since it's treatment of decimals is quite different from
 the dotted-integer format of semantic version strings, and thus can lead to
 inconsistencies. Included only for proper compatibility with L<version>.
 
