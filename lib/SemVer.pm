@@ -233,11 +233,11 @@ inconsistencies. Included only for proper compatibility with L<version>.
 
 =head3 C<normal>
 
-  SemVer->declare('v1.2')->normal;      # 1.2.0
-  SemVer->parse('1.2')->normal;         # 1.200.0
-  SemVer->declare('1.02.0b1')->normal;  # 1.2.0b1
-  SemVer->parse('1.02_30')->normal      # 1.230.0
-  SemVer->parse(1.02_30)->normal        # 1.23.0
+  SemVer->declare('v1.2')->normal;       # 1.2.0
+  SemVer->parse('1.2')->normal;          # 1.200.0
+  SemVer->declare('1.02.0-b1')->normal;  # 1.2.0-b1
+  SemVer->parse('1.02_30')->normal       # 1.230.0
+  SemVer->parse(1.02_30)->normal         # 1.23.0
 
 Returns a normalized representation of the version. This string will always be
 a strictly-valid dotted-integer semantic version string suitable for passing
@@ -248,7 +248,7 @@ to C<new()>. Unlike L<version>'s C<normal> method, there will be no leading
 
   SemVer->declare('v1.2')->stringify;    # v1.2
   SemVer->parse('1.200')->stringify;     # v1.200
-  SemVer->declare('1.2b1')->stringify;   # v1.2b1
+  SemVer->declare('1.2-r1')->stringify;  # v1.2-r1
   SemVer->parse(1.02_30)->stringify;     # v1.0230
   SemVer->parse(1.02_30)->stringify;     # v1.023
 
