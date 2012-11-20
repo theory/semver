@@ -1,5 +1,7 @@
 Revision history for Perl extension SemVer.
 
+0.5.0
+
 0.4.0  2012-11-20T18:59:33Z
       - Updated the parsers to support an optional dash before the prerelease
         version, and `normal()` to always emit a dash for the prerelease
