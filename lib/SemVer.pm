@@ -36,11 +36,12 @@ sub new {
     if (eval { $ival->isa('version') }) {
         my $self = $class->SUPER::new($ival);
         $self->{extra} = $ival->{extra};
+        $self->{dash}  = $ival->{dash};
         return $self;
     }
 
     my ($val, $dash, $extra) = (
-        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)(?:(-?)($OPTIONAL_EXTRA_PART))?$/
+        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)(?:(-)($OPTIONAL_EXTRA_PART))?$/
     );
     _die qq{Invalid semantic version string format: "$ival"}
         unless defined $val;
@@ -165,7 +166,8 @@ instance: C<< 1.0.0-alpha1 < 1.0.0-beta1 < 1.0.0-beta2 < 1.0.0-rc1 < 1.0.0 >>.
 For strict parsing of semantic version numbers, use the C<new()> constructor.
 If you need something more flexible, use C<declare()>. And if you need
 something more comparable with what L<version> expects, try C<parse()>.
-Compare how these constructors deal with various version strings:
+Compare how these constructors deal with various version strings (with values
+shown as returned by C<normal()>:
 
     Argument  | new      | declare     | parse
  -------------+----------+---------------------------
@@ -176,6 +178,7 @@ Compare how these constructors deal with various version strings:
   '  012.2.2' | <error>  | 12.2.2      | 12.2.2
   '1.1'       | <error>  | 1.1.0       | 1.100.0
    1.1        | <error>  | 1.1.0       | 1.100.0
+  '1.1.0b1'   | <error>  | 1.1.0-b1    | 1.1.0-b1
   '1.1-b1'    | <error>  | 1.1.0-b1    | 1.100.0-b1
   '1.2.b1'    | <error>  | 1.2.0-b1    | 1.2.0-b1
   '9.0-beta4' | <error>  | 9.0.0-beta4 | 9.0.0-beta4

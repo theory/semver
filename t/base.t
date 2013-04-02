@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 594;
+use Test::More tests => 588;
 #use Test::More 'no_plan';
 
 my $CLASS;
@@ -33,10 +33,9 @@ for my $v (qw(
     0.0.0
     0.1.999
     9999.9999999.823823
-    1.0.0beta1
-    1.0.0beta2
+    1.0.0-beta1
+    1.0.0-beta2
     1.0.0
-    0.0.0rc1
     0.0.0-rc1
     v1.2.2
     999993333.0.0
@@ -93,7 +92,7 @@ is $cloned->stringify, $version->stringify, 'Cloned stringify like original';
 is $cloned->normal, $version->normal, 'Cloned should normalize like original';
 
 # Try a SemVer with alpha.
-isa_ok $version = $CLASS->new('2.3.2b1'), $CLASS, 'new version';
+isa_ok $version = $CLASS->new('2.3.2-b1'), $CLASS, 'new version';
 isa_ok $cloned = $CLASS->new($version), $CLASS, 'Second cloned SemVer';
 is $cloned->stringify, $version->stringify, 'Second cloned stringify like original';
 is $cloned->normal, $version->normal, 'Second cloned should normalize like original';
@@ -110,8 +109,8 @@ for my $spec (
     [ '1.2.23',       '1.2.23' ],
     [ '0.0.0',        '0.0.0' ],
     [ '999.888.7777', '999.888.7777' ],
-    [ '0.1.2beta3',   '0.1.2beta3' ],
-    [ '1.0.0rc-1',    '1.0.0RC-1' ],
+    [ '0.1.2-beta3',  '0.1.2-beta3' ],
+    [ '1.0.0-rc-1',   '1.0.0-RC-1' ],
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
@@ -132,14 +131,14 @@ for my $spec (
 
 # Test not equal.
 for my $spec (
-    ['1.2.2', '1.2.3'],
-    ['0.0.1', '1.0.0'],
-    ['1.0.1', '1.1.0'],
-    ['1.1.1', '1.1.0'],
-    ['1.2.3b', '1.2.3'],
-    ['1.2.3', '1.2.3b'],
-    ['1.2.3a', '1.2.3b'],
-    ['1.2.3aaaaaaa1', '1.2.3aaaaaaa2'],
+    ['1.2.2',   '1.2.3'],
+    ['0.0.1',   '1.0.0'],
+    ['1.0.1',   '1.1.0'],
+    ['1.1.1',   '1.1.0'],
+    ['1.2.3-b', '1.2.3'],
+    ['1.2.3',   '1.2.3-b'],
+    ['1.2.3-a', '1.2.3-b'],
+    ['1.2.3-aaaaaaa1', '1.2.3-aaaaaaa2'],
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
@@ -150,14 +149,14 @@ for my $spec (
 
 # Test >, >=, <, and <=.
 for my $spec (
-    ['2.2.2', '1.1.1'],
-    ['2.2.2', '2.1.1'],
-    ['2.2.2', '2.2.1'],
-    ['2.2.2b', '2.2.1'],
-    ['2.2.2', '2.2.2b'],
-    ['2.2.2c', '2.2.2b'],
-    ['2.2.2rc-2', '2.2.2RC-1'],
-    ['0.9.10', '0.9.9'],
+    ['2.2.2',      '1.1.1'],
+    ['2.2.2',      '2.1.1'],
+    ['2.2.2',      '2.2.1'],
+    ['2.2.2-b',    '2.2.1'],
+    ['2.2.2',      '2.2.2-b'],
+    ['2.2.2-c',    '2.2.2-b'],
+    ['2.2.2-rc-2', '2.2.2-RC-1'],
+    ['0.9.10',     '0.9.9'],
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
