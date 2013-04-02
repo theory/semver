@@ -1,6 +1,6 @@
 Revision history for Perl extension SemVer.
 
-0.5.0
+0.5.0  2013-04-02T06:57:06Z
       - The `new()` now throws an exception when a version string has a
         prerelease version with no preceding dash. This is keep its
         requirement for strictness consistent.
