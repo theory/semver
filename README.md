@@ -1,4 +1,4 @@
-SemVer version 0.5.0
+SemVer version 0.6.0
 ====================
 
 This module subclasses [`version`] to create semantic versions, as defined by
