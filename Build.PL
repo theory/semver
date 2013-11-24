@@ -24,7 +24,7 @@ Module::Build->new(
         resources => {
             homepage    => 'http://search.cpan.org/dist/SemVer/',
             bugtracker  => 'http://github.com/theory/semver/issues/',
-            repository  => 'http://github.com/theory/semver/tree/',
+            repository  => 'http://github.com/theory/semver',
         }
     },
 )->create_build_script;
