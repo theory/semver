@@ -270,6 +270,11 @@ for my $spec (
         isa_ok my $v = version->parse($spec->[0]), 'version', "base version $spec->[0]";
         isa_ok my $sv = SemVer->new($v), 'SemVer', "SemVer from base version $spec->[0]";
         is $sv->stringify, $string, qq{... And it should stringify to "$vstring"};
-        is $sv->normal, $l->normal, '... And it should normalize to "' . $l->normal . '"';
+        SKIP: {
+            skip 'version 0.9911 broke alpha->normal()', 1,
+                if $spec->[0] =~ /_/ && version->VERSION == 0.9911;
+            is $sv->normal, $l->normal,
+                '... And it should normalize to "' . $l->normal . '"';
+        }
     }
 }
