@@ -239,7 +239,6 @@ for my $spec (
     [0,                '0.0.0' ],
     ['0rc1',           '0.0.0-rc1' ],
 ) { SKIP: {
-    diag $spec->[0];
         skip 'Two-integer vstrings weak on Perl 5.8', 12
             if $no_2digitvst && Scalar::Util::isvstring($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
