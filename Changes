@@ -4,6 +4,7 @@ Revision history for Perl extension SemVer.
       - Removed tests that fail on version.pm 0.9910 and higher due to
         trailing decimal sign. Thanks to Andreas Koenig for the report and
         diagnosis.
+      - Fixed failing test and vstring warning on Perl 5.8.
 
 0.5.0  2013-04-02T06:57:06Z
       - The `new()` now throws an exception when a version string has a
