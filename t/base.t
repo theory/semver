@@ -11,6 +11,7 @@ BEGIN {
     use_ok $CLASS or die;
 }
 
+diag +version->VERSION;
 can_ok $CLASS, qw(
     new
     declare
