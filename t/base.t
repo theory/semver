@@ -92,9 +92,13 @@ is $version->stringify, 'v2.3.2', 'vestring should stringify with "v"';
 is $version->normal, '2.3.2', 'vstring should normalize without "v"';
 
 # Try a shorter vstring.
-isa_ok $version = $CLASS->new(v2.3), $CLASS, 'vstring version';
-is $version->stringify, 'v2.3', 'short vestring should stringify with "v"';
-is $version->normal, '2.3.0', 'short vstring should normalize without required 0';
+my $no_2digitvst = $] < 5.10 && version->VERSION < 0.9910;
+SKIP: {
+    skip 'Two-integer vstrings weak on Perl 5.8', 3 if $no_2digitvst;
+    isa_ok $version = $CLASS->new(v2.3), $CLASS, 'vstring version';
+    is $version->stringify, 'v2.3', 'short vestring should stringify with "v"';
+    is $version->normal, '2.3.0', 'short vstring should normalize without required 0';
+}
 
 # Try another SemVer.
 isa_ok my $cloned = $CLASS->new($version), $CLASS, 'Cloned SemVer';
@@ -234,7 +238,10 @@ for my $spec (
     ['0',              '0.0.0' ],
     [0,                '0.0.0' ],
     ['0rc1',           '0.0.0-rc1' ],
-) {
+) { SKIP: {
+    diag $spec->[0];
+        skip 'Two-integer vstrings weak on Perl 5.8', 12
+            if $no_2digitvst && Scalar::Util::isvstring($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
     isa_ok my $l = SemVer->declare($spec->[0]), $CLASS, "Declared $spec->[0]";
     my $string = Scalar::Util::isvstring($spec->[0])
@@ -277,4 +284,4 @@ for my $spec (
                 '... And it should normalize to "' . $l->normal . '"';
         }
     }
-}
+}}
