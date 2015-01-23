@@ -30,6 +30,5 @@
 ^SemVer
 ^[.]travis.yml
 
-# Avoid spelling test.
-pod-spelling.t$
-
+# Avoid Pod tests.
+t/pod[^.]*\.t
