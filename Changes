@@ -1,5 +1,7 @@
 Revision history for Perl extension SemVer.
 
+0.7.0
+
 0.6.0  2015-01-23T05:07:58Z
       - Removed tests that fail on version.pm 0.9910 and higher due to
         trailing decimal sign. Thanks to Andreas Koenig for the report and
