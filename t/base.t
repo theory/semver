@@ -26,6 +26,7 @@ can_ok $CLASS, qw(
 # Try the basics.
 isa_ok my $version = $CLASS->new('0.1.0'), $CLASS, 'An instance';
 isa_ok $SemVer::VERSION, $CLASS, q{SemVer's own $VERSION};
+my $is_vpp = !!grep { $_ eq 'version::vpp' } @version::ISA;
 
 for my $v (qw(
     1.2.2
@@ -47,14 +48,15 @@ for my $v (qw(
     $str =~ s/(\d)([a-z].+)$/$1-$2/;
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
-    if ($v =~ /0\.0\.0/) {
-        SKIP: {
-            skip 'Ignore werid failure on Perl 5.8.', 1, $] < 5.010;
+    SKIP: {
+        skip 'Boolean comparison broken with version::vpp', 1, $is_vpp;
+        if ($v =~ /0\.0\.0/) {
             ok !$semver, "$v should be false";
+        } else {
+            ok !!$semver, "$v should be true";
         }
-    } else {
-        ok !!$semver, "$v should be true";
     }
+
     ok $semver->is_qv, "$v should be dotted-decimal";
 
     my $is_alpha = $semver->is_alpha;
@@ -241,7 +243,10 @@ for my $spec (
     $string =~ s/\s+$//;
     $string += 0 if $string =~ s/_//g;
     my $vstring = $string =~ /^\d+[.][^.]+$/ ? "v$string" : $string;
-    is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
+    SKIP: {
+        skip 'Stringification broken with version::vpp', 1, $is_vpp;
+        is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
+    }
     is $l->normal, $spec->[1],  qq{... And it should normalize to "$spec->[1]"};
 
     # Compare the non-semantic version string to the semantic one.
