@@ -28,6 +28,8 @@
 
 # Avoid build files.
 ^SemVer
+^[.]travis.yml
 
 # Avoid spelling test.
 pod-spelling.t$
+
