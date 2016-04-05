@@ -12,7 +12,7 @@ use overload (
 );
 
 our @ISA = qw(version);
-our $VERSION = '0.7.0'; # For Module::Build
+our $VERSION = '0.8.0-alpha.1'; # For Module::Build
 
 sub _die { require Carp; Carp::croak(@_) }
 
@@ -21,10 +21,17 @@ sub import {}
 
 # Adapted from version.pm.
 my $STRICT_INTEGER_PART = qr/0|[1-9][0-9]*/;
-my $STRICT_DOTTED_INTEGER_PART = qr/\.$STRICT_INTEGER_PART/;
-my $STRICT_DOTTED_INTEGER_VERSION =
-    qr/ $STRICT_INTEGER_PART $STRICT_DOTTED_INTEGER_PART{2,} /x;
-my $OPTIONAL_EXTRA_PART = qr/[a-zA-Z][-0-9A-Za-z]*/;
+my $DOT_SEPARATOR = qr/\./;
+my $PLUS_SEPARATOR = qr/\+/;
+my $DASH_SEPARATOR = qr/-/;
+my $STRICT_DOTTED_INTEGER_PART = qr/$DOT_SEPARATOR$STRICT_INTEGER_PART/;
+my $STRICT_DOTTED_INTEGER_VERSION = qr/ $STRICT_INTEGER_PART $STRICT_DOTTED_INTEGER_PART{2,} /x;
+my $IDENTIFIER = qr/[-0-9A-Za-z]+/;
+my $DOTTED_IDENTIFIER = qr/(?:$DOT_SEPARATOR$IDENTIFIER)*/;
+my $PRERELEASE = qr/$IDENTIFIER$DOTTED_IDENTIFIER/;
+my $METADATA = qr/$IDENTIFIER$DOTTED_IDENTIFIER/;
+
+my $OPTIONAL_EXTRA_PART = qr/$PRERELEASE($PLUS_SEPARATOR$METADATA)?/;
 
 sub new {
     my ($class, $ival) = @_;
@@ -41,7 +48,7 @@ sub new {
     }
 
     my ($val, $dash, $extra) = (
-        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)(?:(-)($OPTIONAL_EXTRA_PART))?$/
+        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))?$/
     );
     _die qq{Invalid semantic version string format: "$ival"}
         unless defined $val;
@@ -49,7 +56,21 @@ sub new {
     my $self = $class->SUPER::new($val);
     $self->{dash}  = $dash;
     $self->{extra} = $extra;
+    $self->_evalPreRelease($self->{extra});
+
     return $self;
+}
+
+# Internal function to split up given string into prerelease- and patch-components
+sub _evalPreRelease {
+    my $self = shift;
+    my $v = shift;
+    my ($preRelease, $patch) = (
+       $v =~ /^($PRERELEASE)(?:(?:$PLUS_SEPARATOR)($METADATA))?$/
+    );
+    @{$self->{prerelease}} = split $DOT_SEPARATOR,$preRelease;
+    @{$self->{patch}} = split $DOT_SEPARATOR, $patch;
+    return;
 }
 
 $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
@@ -59,13 +80,14 @@ sub declare {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/(?:(-?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    (my $v = $ival) =~ s/(?:($DASH_SEPARATOR?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
     my $dash  = $1;
     my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::declare($v);
     $self->{dash}  = $dash;
     $self->{extra} = $extra;
+    $self->_evalPreRelease($self->extra);
     return $self;
 }
 
@@ -74,13 +96,14 @@ sub parse {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/(?:(-?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    (my $v = $ival) =~ s/(?:($DASH_SEPARATOR?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
     my $dash  = $1;
     my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::parse($v);
     $self->{dash}  = $dash;
     $self->{extra} = $extra;
+    $self->_evalPreRelease($self->extra);
     return $self;
 }
 
