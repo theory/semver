@@ -5,6 +5,9 @@ use warnings;
 use Test::More tests => 568;
 #use Test::More 'no_plan';
 
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
 my $CLASS;
 BEGIN {
     $CLASS = 'SemVer';
@@ -116,6 +119,18 @@ local $@;
 eval { $version->numify };
 like $@, qr{Semantic versions cannot be numified},
     'Should get error from numify()';
+
+
+# Compare Versions from SemVer 2.0
+my @ver = ("0.9.0","1.0.0-alpha","1.0.0-alpha.1","1.0.0-alpha.beta","1.0.0-beta","1.0.0-beta.2","1.0.0-beta.11","1.0.0-beta.31","1.0.0-beta.200","1.0.0-rc.1","1.0.0","2.0.0","2.1.0","2.1.1");
+
+for (my $i = 0; $i < (scalar(@ver)-1); $i++) {
+  for (my $j = $i+1; $j < scalar(@ver); $j++) {
+    my $l = SemVer->new($ver[$i]);
+    my $r = SemVer->new($ver[$j]);
+    cmp_ok $l, '<', $r, "$l < $r";
+  }
+}
 
 # Now do some comparisons. Start with equivalents.
 for my $spec (
@@ -284,3 +299,4 @@ for my $spec (
         }
     }
 }}
+

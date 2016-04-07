@@ -12,7 +12,7 @@ use overload (
 );
 
 our @ISA = qw(version);
-our $VERSION = '0.8.0-alpha.1'; # For Module::Build
+our $VERSION = '0.8.0-alpha.2'; # For Module::Build
 
 sub _die { require Carp; Carp::croak(@_) }
 
@@ -44,6 +44,7 @@ sub new {
         my $self = $class->SUPER::new($ival);
         $self->{extra} = $ival->{extra};
         $self->{dash}  = $ival->{dash};
+        $self->_evalPreRelease($self->{extra});
         return $self;
     }
 
@@ -63,13 +64,15 @@ sub new {
 
 # Internal function to split up given string into prerelease- and patch-components
 sub _evalPreRelease {
+    no warnings 'uninitialized';
     my $self = shift;
     my $v = shift;
-    my ($preRelease, $patch) = (
-       $v =~ /^($PRERELEASE)(?:(?:$PLUS_SEPARATOR)($METADATA))?$/
+    my ($preRelease, $plus, $patch) = (
+       $v =~ /^($PRERELEASE)(?:($PLUS_SEPARATOR)($METADATA))?$/
     );
     @{$self->{prerelease}} = split $DOT_SEPARATOR,$preRelease;
-    @{$self->{patch}} = split $DOT_SEPARATOR, $patch;
+    $self->{plus} = $plus;
+    @{$self->{patch}} = (split $DOT_SEPARATOR, $patch || undef);
     return;
 }
 
@@ -125,6 +128,21 @@ sub normal   {
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
 
+
+# Sort Ordering:
+# Precedence refers to how versions are compared to each other when ordered. Precedence MUST be calculated by
+# separating the version into major, minor, patch and pre-release identifiers in that order (Build metadata does not figure into precedence).
+# Precedence is determined by the first difference when comparing each of these identifiers from left to right as follows:
+# 1. Major, minor, and patch versions are always compared numerically. Example: 1.0.0 < 2.0.0 < 2.1.0 < 2.1.1.
+# 2. When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version.
+#    Example: 1.0.0-alpha < 1.0.0.
+# 3. Precedence for two pre-release versions with the same major, minor, and patch version MUST be determined by
+#    comparing each dot separated identifier from left to right until a difference is found as follows:
+#    3.a. identifiers consisting of only digits are compared numerically and identifiers with letters or hyphens are
+#         compared lexically in ASCII sort order.
+#    3.b. Numeric identifiers always have lower precedence than non-numeric identifiers.
+#    3.c. A larger set of pre-release fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
+#    Example: 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
 sub vcmp {
     my $left  = shift;
     my $right = ref($left)->declare(shift);
@@ -132,16 +150,63 @@ sub vcmp {
     # Reverse?
     ($left, $right) = shift() ? ($right, $left): ($left, $right);
 
-    # Major and minor win.
+    # Major and minor win. - case 1.
     if (my $ret = $left->SUPER::vcmp($right, 0)) {
         return $ret;
-    } else {
-        # They're equal. Check the extra text stuff.
-        if (my $l = $left->{extra}) {
-            my $r = $right->{extra} or return -1;
-            return lc $l cmp lc $r;
+    } else { #cases 2, 3
+        my $lenLeft = scalar(@{$left->{prerelease}});
+        my $lenRight = scalar(@{$right->{prerelease}});
+        my $lenMin =  ($lenLeft, $lenRight)[$lenLeft > $lenRight];
+        if ( $lenLeft == 0) {
+            if ($lenRight == 0) {
+                return 0; # Neither LEFT nor RIGHT have a prerelease part - versions are equal
+            } else {
+                # Case 2: When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version.
+                return 1; # Only RIGHT has prelease - not LEFT -> LEFT wins
+            }
         } else {
-            return $right->{extra} ? 1 : 0;
+            if ($lenRight == 0) {
+                # Case 2: When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version.
+                return -1; # Only LEFT has prelease - not RIGHT -> RIGHT wins
+            } else {
+                # LEFT and RIGHT have prelease parts - compare each part separately
+                for (my $i = 0; $i < $lenMin; $i++) {
+                    my $isNumLeft = Scalar::Util::looks_like_number($left->{prerelease}->[$i]);
+                    my $isNumRight = Scalar::Util::looks_like_number($right->{prerelease}->[$i]);
+                    # Case 3.b: Numeric identifiers always have lower precedence than non-numeric identifiers
+                    if (!$isNumLeft && $isNumRight) {
+                        return 1; # LEFT part of prelease is Non-numeric - RIGHT part is numeric -> LEFT wins
+										} elsif ($isNumLeft && !$isNumRight) {
+                        return -1; # LEFT part of prelease is numeric - RIGHT part is non-numeric -> RIGHT wins
+                    } elsif ($isNumLeft && $isNumRight) {
+                        # Case 3.a.1: identifiers consisting of only digits are compared numerically
+                        if ($left->{prerelease}->[$i] == $right->{prerelease}->[$i] ) {
+                            next;  # LEFT part and RIGHT part are equal - step to next part
+												} elsif ($left->{prerelease}->[$i] > $right->{prerelease}->[$i] ) {
+                            return 1; # LEFT part is greater than RIGHT part -> LEFT wins
+                        } else {
+                            return -1; return 1; # LEFT part is smallerer than RIGHT part -> RIGHT wins
+                        }
+                    } else {
+                        # Case 3.a.2: identifiers with letters or hyphens are compared lexically in ASCII sort order.
+                        if (lc $left->{prerelease}->[$i] eq lc $right->{prerelease}->[$i] ) {
+                            next;  # LEFT part and RIGHT part are equal - step to next part
+												} elsif (lc $left->{prerelease}->[$i] gt  lc $right->{prerelease}->[$i] ) {
+                            return 1; # LEFT part is greater than RIGHT part -> LEFT wins
+                        } else {
+                            return -1; return 1; # LEFT part is smaller than RIGHT part -> RIGHT wins
+                        }
+                    }
+                }
+                # Case 3.c: A larger set of pre-release fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal
+                if ($lenLeft > $lenRight) {
+                    return 1; # All existing fields are equal, but LEFT has more fields -> LEFT wins
+								} elsif ($lenLeft < $lenRight) {
+                    return -1; # All existing fields are equal, but LEFT has more fields -> RIGHT wins
+                }
+                # All fields are equal
+                return 0;
+            }
         }
     }
 }
