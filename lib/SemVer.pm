@@ -159,7 +159,7 @@ sub vcmp {
         my $lenMin =  ($lenLeft, $lenRight)[$lenLeft > $lenRight];
         if ( $lenLeft == 0) {
             if ($lenRight == 0) {
-                return 0; # Neither LEFT nor RIGHT have a prerelease part - versions are equal
+                return 0; # Neither LEFT nor RIGHT have prerelease identifiers - versions are equal
             } else {
                 # Case 2: When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version.
                 return 1; # Only RIGHT has prelease - not LEFT -> LEFT wins
@@ -167,44 +167,44 @@ sub vcmp {
         } else {
             if ($lenRight == 0) {
                 # Case 2: When major, minor, and patch are equal, a pre-release version has lower precedence than a normal version.
-                return -1; # Only LEFT has prelease - not RIGHT -> RIGHT wins
+                return -1; # Only LEFT has prelease identifiers - not RIGHT -> RIGHT wins
             } else {
-                # LEFT and RIGHT have prelease parts - compare each part separately
+                # LEFT and RIGHT have prelease identifiers - compare each part separately
                 for (my $i = 0; $i < $lenMin; $i++) {
                     my $isNumLeft = Scalar::Util::looks_like_number($left->{prerelease}->[$i]);
                     my $isNumRight = Scalar::Util::looks_like_number($right->{prerelease}->[$i]);
                     # Case 3.b: Numeric identifiers always have lower precedence than non-numeric identifiers
                     if (!$isNumLeft && $isNumRight) {
-                        return 1; # LEFT part of prelease is Non-numeric - RIGHT part is numeric -> LEFT wins
+                        return 1; # LEFT identifier is Non-numeric - RIGHT identifier is numeric -> LEFT wins
 										} elsif ($isNumLeft && !$isNumRight) {
-                        return -1; # LEFT part of prelease is numeric - RIGHT part is non-numeric -> RIGHT wins
+                        return -1; # LEFT identifier is numeric - RIGHT identifier is non-numeric -> RIGHT wins
                     } elsif ($isNumLeft && $isNumRight) {
                         # Case 3.a.1: identifiers consisting of only digits are compared numerically
                         if ($left->{prerelease}->[$i] == $right->{prerelease}->[$i] ) {
-                            next;  # LEFT part and RIGHT part are equal - step to next part
+                            next;  # LEFT identifier and RIGHT identifier are equal - step to next part
 												} elsif ($left->{prerelease}->[$i] > $right->{prerelease}->[$i] ) {
-                            return 1; # LEFT part is greater than RIGHT part -> LEFT wins
+                            return 1; # LEFT identifier is bigger than RIGHT identifier -> LEFT wins
                         } else {
-                            return -1; return 1; # LEFT part is smallerer than RIGHT part -> RIGHT wins
+                            return -1; return 1; # LEFT identifier is smaller than RIGHT identifier -> RIGHT wins
                         }
                     } else {
                         # Case 3.a.2: identifiers with letters or hyphens are compared lexically in ASCII sort order.
                         if (lc $left->{prerelease}->[$i] eq lc $right->{prerelease}->[$i] ) {
-                            next;  # LEFT part and RIGHT part are equal - step to next part
+                            next;  # LEFT identifier and RIGHT identifier are equal - step to next part
 												} elsif (lc $left->{prerelease}->[$i] gt  lc $right->{prerelease}->[$i] ) {
-                            return 1; # LEFT part is greater than RIGHT part -> LEFT wins
+                            return 1; # LEFT identifier is bigger than RIGHT identifier -> LEFT wins
                         } else {
-                            return -1; return 1; # LEFT part is smaller than RIGHT part -> RIGHT wins
+                            return -1; return 1; # LEFT identifier is smaller than RIGHT identifier -> RIGHT wins
                         }
                     }
                 }
                 # Case 3.c: A larger set of pre-release fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal
                 if ($lenLeft > $lenRight) {
-                    return 1; # All existing fields are equal, but LEFT has more fields -> LEFT wins
+                    return 1; # All existing identifiers are equal, but LEFT has more identifiers -> LEFT wins
 								} elsif ($lenLeft < $lenRight) {
-                    return -1; # All existing fields are equal, but LEFT has more fields -> RIGHT wins
+                    return -1; # All existing identifiers are equal, but LEFT has more identifiers -> RIGHT wins
                 }
-                # All fields are equal
+                # All identifiers are equal
                 return 0;
             }
         }
