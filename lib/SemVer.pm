@@ -12,7 +12,7 @@ use overload (
 );
 
 our @ISA = qw(version);
-our $VERSION = '0.8.0-alpha.2'; # For Module::Build
+our $VERSION = '0.8.0-alpha.3'; # For Module::Build
 
 sub _die { require Carp; Carp::croak(@_) }
 
@@ -83,14 +83,14 @@ sub declare {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/(?:($DASH_SEPARATOR?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    (my $v = $ival) =~ s/^v?$STRICT_DOTTED_INTEGER_VERSION(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
     my $dash  = $1;
     my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::declare($v);
     $self->{dash}  = $dash;
     $self->{extra} = $extra;
-    $self->_evalPreRelease($self->extra);
+    $self->_evalPreRelease($self->{extra});
     return $self;
 }
 
@@ -99,14 +99,14 @@ sub parse {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/(?:($DASH_SEPARATOR?)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    (my $v = $ival) =~ s/^v?$STRICT_DOTTED_INTEGER_VERSION(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
     my $dash  = $1;
     my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
     my $self = $class->SUPER::parse($v);
     $self->{dash}  = $dash;
     $self->{extra} = $extra;
-    $self->_evalPreRelease($self->extra);
+    $self->_evalPreRelease($self->{extra});
     return $self;
 }
 

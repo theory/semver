@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 568;
+use Test::More tests => 610;
 #use Test::More 'no_plan';
 
 use FindBin qw($Bin);
@@ -120,18 +120,6 @@ eval { $version->numify };
 like $@, qr{Semantic versions cannot be numified},
     'Should get error from numify()';
 
-
-# Compare Versions from SemVer 2.0
-my @ver = ("0.9.0","1.0.0-alpha","1.0.0-alpha.1","1.0.0-alpha.beta","1.0.0-beta","1.0.0-beta.2","1.0.0-beta.11","1.0.0-beta.31","1.0.0-beta.200","1.0.0-rc.1","1.0.0","2.0.0","2.1.0","2.1.1");
-
-for (my $i = 0; $i < (scalar(@ver)-1); $i++) {
-  for (my $j = $i+1; $j < scalar(@ver); $j++) {
-    my $l = SemVer->new($ver[$i]);
-    my $r = SemVer->new($ver[$j]);
-    cmp_ok $l, '<', $r, "$l < $r";
-  }
-}
-
 # Now do some comparisons. Start with equivalents.
 for my $spec (
     [ '1.2.2',        '1.2.2' ],
@@ -201,6 +189,17 @@ for my $spec (
     cmp_ok $r, 'le', $l, "$r le $l";
 }
 
+# Compare Versions from SemVer 2.0
+my @ver = ("0.9.0","1.0.0-alpha","1.0.0-alpha.1","1.0.0-alpha.beta","1.0.0-beta","1.0.0-beta.2","1.0.0-beta.11","1.0.0-beta.31","1.0.0-beta.200","1.0.0-rc.1","1.0.0","2.0.0","2.1.0","2.1.1");
+
+for (my $i = 0; $i < (scalar(@ver)-1); $i++) {
+  for (my $j = $i+1; $j < scalar(@ver); $j++) {
+    my $l = SemVer->new($ver[$i]);
+    my $r = SemVer->new($ver[$j]);
+    cmp_ok $l, '<', $r, "$l < $r";
+  }
+}
+
 # Compare to version objects.
 my $semver = $CLASS->new('1.2.0');
 for my $v (qw(
@@ -231,15 +230,15 @@ for my $spec (
     ['01.2.2',         '1.2.2'],
     ['1.02.2',         '1.2.2'],
     ['1.2.02',         '1.2.2'],
-    ['1.2.02b',        '1.2.2-b'],
-    ['1.2.02beta-3  ', '1.2.2-beta-3'],
-    ['1.02.02rc1',     '1.2.2-rc1'],
+#    ['1.2.02b',        '1.2.2-b'],
+#    ['1.2.02beta-3  ', '1.2.2-beta-3'],
+#    ['1.02.02rc1',     '1.2.2-rc1'],
     ['1.0',            '1.0.0'],
     ['1.1',            '1.1.0',   '1.100.0'],
     [ 1.1,             '1.1.0',   '1.100.0'],
-    ['1.1b1',          '1.1.0-b1', '1.100.0-b1'],
-    ['1b',             '1.0.0-b'],
-    ['9.0beta4',       '9.0.0-beta4'],
+#    ['1.1b1',          '1.1.0-b1', '1.100.0-b1'],
+#    ['1b',             '1.0.0-b'],
+#    ['9.0beta4',       '9.0.0-beta4'],
     ['  012.2.2',      '12.2.2'],
     ['99999998',       '99999998.0.0'],
     ['1.02_30',        '1.23.0'],
@@ -252,7 +251,7 @@ for my $spec (
     ['9',              '9.0.0' ],
     ['0',              '0.0.0' ],
     [0,                '0.0.0' ],
-    ['0rc1',           '0.0.0-rc1' ],
+#    ['0rc1',           '0.0.0-rc1' ],
 ) { SKIP: {
         skip 'Two-integer vstrings weak on Perl 5.8', 12
             if $no_2digitvst && Scalar::Util::isvstring($spec->[0]);
@@ -300,3 +299,22 @@ for my $spec (
     }
 }}
 
+for my $v (qw(
+  1.2.02b
+  1.2.02beta-3
+  1.02.02rc1
+  1.1b1
+  1b
+  9.0beta4
+  0rc1
+)) {
+  eval {
+    my $l = SemVer->declare($v);
+  };
+  if ($@) {
+    is 1, 1,  $v.' is not a SemVer';
+  }
+  else {
+    is 1, 0,  $v.' should not be not a SemVer';
+  }
+}
