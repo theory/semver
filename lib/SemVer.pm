@@ -202,7 +202,7 @@ sub vcmp {
                 if ($lenLeft > $lenRight) {
                     return 1; # All existing identifiers are equal, but LEFT has more identifiers -> LEFT wins
 								} elsif ($lenLeft < $lenRight) {
-                    return -1; # All existing identifiers are equal, but LEFT has more identifiers -> RIGHT wins
+                    return -1; # All existing identifiers are equal, but RIGHT has more identifiers -> RIGHT wins
                 }
                 # All identifiers are equal
                 return 0;
@@ -226,7 +226,7 @@ SemVer - Use semantic version numbers
 
 This module subclasses L<version> to create semantic versions, as defined by
 the L<Semantic Versioning 2.0.0 Specification|http://semver.org/spec/v2.0.0.html>.
-The two salient points of the specification, for the purposes of version
+The three salient points of the specification, for the purposes of version
 formatting, are:
 
 =over
