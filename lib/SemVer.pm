@@ -154,8 +154,14 @@ sub vcmp {
     if (my $ret = $left->SUPER::vcmp($right, 0)) {
         return $ret;
     } else { #cases 2, 3
-        my $lenLeft = scalar(@{$left->{prerelease}});
-        my $lenRight = scalar(@{$right->{prerelease}});
+    	my $lenLeft = 0;
+    	my $lenRight = 0;
+    	if (defined $left->{prerelease}) {
+        	$lenLeft = scalar(@{$left->{prerelease}});
+        }
+        if (defined $right->{prerelease}) {
+        	$lenRight = scalar(@{$right->{prerelease}});
+        }
         my $lenMin =  ($lenLeft, $lenRight)[$lenLeft > $lenRight];
         if ( $lenLeft == 0) {
             if ($lenRight == 0) {
