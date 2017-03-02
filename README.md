@@ -3,12 +3,13 @@ SemVer version 0.8.0
 
 This module subclasses [`version`] to create semantic versions, as defined by
 the [Semantic Versioning 2.0.0 Specification]
-The four salient points of the specification, for the purposes of version
+The salient points of the specification, for the purposes of version
 formatting, are:
 
-1. A normal version number MUST take the form X.Y.Z where X, Y, and Z are
-   integers. X is the major version, Y is the minor version, and Z is the
-   patch version. Each element MUST increase numerically by increments of one.
+1. A normal version number MUST take the form X.Y.Z where X, Y, and Z are 
+   non-negative integers, and MUST NOT contain leading zeroes. X is the major 
+   version, Y is the minor version, and Z is the patch version. Each element 
+   MUST increase numerically.
    For instance: `1.9.0 < 1.10.0 < 1.11.0`.
 
 2. A pre-release version MAY be denoted by appending a hyphen and a series 
@@ -19,7 +20,7 @@ formatting, are:
    normal version. A pre-release version indicates that the version is 
    unstable and might not satisfy the intended compatibility requirements 
    as denoted by its associated normal version. 
-   Examples: `1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-0.3.7 < 1.0.0-x.7.z.92`.
+   Examples: `1.0.0-alpha, 1.0.0-alpha.1, 1.0.0-0.3.7, 1.0.0-x.7.z.92`.
 
 3. Build metadata MAY be denoted by appending a plus sign and a series of 
    dot separated identifiers immediately following the patch or pre-release 
