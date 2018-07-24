@@ -441,11 +441,17 @@ debugging help.
 
 =head1 Authors
 
-David E. Wheeler <david@kineticode.com>
+=over
+
+=item * David E. Wheeler <david@kineticode.com>
+
+=item * Johannes Kilian <hoppfrosch@gmx.de> 
+
+=back
 
 =head1 Copyright and License
 
-Copyright (c) 2010-2017 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2010-2018 David E. Wheeler. Some Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
