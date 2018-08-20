@@ -83,7 +83,7 @@ sub declare {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/^v?$STRICT_DOTTED_INTEGER_VERSION(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    (my $v = $ival) =~ s/($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART)$//;
     my $dash  = $1;
     my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
@@ -99,7 +99,7 @@ sub parse {
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/^v?$STRICT_DOTTED_INTEGER_VERSION(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
+    (my $v = $ival) =~ s/($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART)$//;
     my $dash  = $1;
     my $extra = $2;
     $v += 0 if $v =~ s/_//g; # ignore underscores.
