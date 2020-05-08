@@ -1,5 +1,7 @@
 Revision history for Perl extension SemVer.
 
+0.10.0
+
 0.7.0  2018-07-24T11:09:17Z
       - Implemented Semantic Versioning 2.0.0 specification
       - Updated tests for Semantic Versioning 2.0.0
