@@ -12,6 +12,14 @@ my $CLASS;
 BEGIN {
     $CLASS = 'SemVer';
     use_ok $CLASS or die;
+
+    unless (eval { my $x = !$CLASS->new('1.0.0') }) {
+        # Borked version:vpp. Overload bool.
+        diag 'here';
+        $CLASS->overload::OVERLOAD(bool => sub {
+            version::vcmp(shift, $CLASS->declare('0.0.0'), 1);
+        });
+    }
 }
 
 diag 'Testing with version v', version->VERSION;
@@ -29,7 +37,6 @@ can_ok $CLASS, qw(
 # Try the basics.
 isa_ok my $version = $CLASS->new('0.1.0'), $CLASS, 'An instance';
 isa_ok $SemVer::VERSION, $CLASS, q{SemVer's own $VERSION};
-my $is_vpp = !!grep { $_ eq 'version::vpp' } @version::ISA;
 
 for my $v (qw(
     1.2.2
@@ -51,13 +58,10 @@ for my $v (qw(
     $str =~ s/(\d)([a-z].+)$/$1-$2/;
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
-    SKIP: {
-        skip 'Boolean comparison broken with version::vpp', 1, $is_vpp;
-        if ($v =~ /0\.0\.0/) {
-            ok !$semver, "$v should be false";
-        } else {
-            ok !!$semver, "$v should be true";
-        }
+    if ($v =~ /0\.0\.0/) {
+        ok !$semver, "$v should be false";
+    } else {
+        ok !!$semver, "$v should be true";
     }
 
     ok $semver->is_qv, "$v should be dotted-decimal";
@@ -224,6 +228,12 @@ for my $v (qw(
     cmp_ok $v, 'eq', $semver, qq{"$v" eq $semver};
 }
 
+# Tweak tweak v prefix regex? Some versions of version:vpp do it differently.
+my $vq = qr/^\d+[.][^.]+$/;
+if ($CLASS->declare('0')->stringify eq 'v0') {
+    $vq = qr/^\d+([.]?[^.]+)?$/;
+}
+
 # Test declare() and parse.
 for my $spec (
     ['1.2.2',          '1.2.2'],
@@ -262,11 +272,8 @@ for my $spec (
     $string =~ s/^\s+//;
     $string =~ s/\s+$//;
     $string += 0 if $string =~ s/_//g;
-    my $vstring = $string =~ /^\d+[.][^.]+$/ ? "v$string" : $string;
-    SKIP: {
-        skip 'Stringification broken with version::vpp', 1, $is_vpp;
-        is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
-    }
+    my $vstring = $string =~ $vq ? "v$string" : $string;
+    is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
     is $l->normal, $spec->[1],  qq{... And it should normalize to "$spec->[1]"};
 
     # Compare the non-semantic version string to the semantic one.

@@ -11,6 +11,15 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 use SemVer;
 
+BEGIN {
+    unless (eval { my $x = !SemVer->new('1.0.0') }) {
+        # Borked version:vpp. Overload bool.
+        SemVer->overload::OVERLOAD(bool => sub {
+            version::vcmp(shift, SemVer->declare('0.0.0'), 1);
+        });
+    }
+}
+
 # Valid Semantic Versions
 for my $v (qw(
     0.0.4

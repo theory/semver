@@ -14,7 +14,7 @@ Module::Build->new(
     },
     requires           => {
         'version' => 0.82,
-        'perl'    => 5.010000,
+        'perl'    => 5.008001,
     },
     recommends         => {
         'Test::Pod'           => '1.41',

@@ -1,6 +1,6 @@
 package SemVer;
 
-use 5.010000;
+use 5.008001;
 use strict;
 use version 0.82;
 use Scalar::Util ();
@@ -41,7 +41,6 @@ sub new {
     _die qq{Invalid semantic version string format: "$ival"}
         unless defined $major;
 
-
     return _init($class->SUPER::new("$major.$minor.$patch"), $prerelease, $meta);
 }
 
@@ -73,10 +72,13 @@ sub _lenient {
             (?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?
         [[:space:]]*$/x
     );
+
+    _die qq{Invalid semantic version string format: "$ival"}
+        unless defined $v;
+
     $v += 0 if $v && $v =~ s/_//g; # ignore underscores.
     my $code = $class->can("SUPER::$ctor");
     return _init($code->($class, $v), $prerelease, $meta);
-
 }
 
 sub declare {
