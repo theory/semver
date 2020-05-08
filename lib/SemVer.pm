@@ -19,20 +19,6 @@ sub _die { require Carp; Carp::croak(@_) }
 # Prevent version.pm from mucking with our internals.
 sub import {}
 
-# Adapted from version.pm.
-my $STRICT_INTEGER_PART = qr/0|[1-9][0-9]*/;
-my $DOT_SEPARATOR = qr/\./;
-my $PLUS_SEPARATOR = qr/\+/;
-my $DASH_SEPARATOR = qr/-/;
-my $STRICT_DOTTED_INTEGER_PART = qr/$DOT_SEPARATOR$STRICT_INTEGER_PART/;
-my $STRICT_DOTTED_INTEGER_VERSION = qr/ $STRICT_INTEGER_PART $STRICT_DOTTED_INTEGER_PART{2,} /x;
-my $IDENTIFIER = qr/[-0-9A-Za-z]+/;
-my $DOTTED_IDENTIFIER = qr/(?:$DOT_SEPARATOR$IDENTIFIER)*/;
-my $PRERELEASE = qr/$IDENTIFIER$DOTTED_IDENTIFIER/;
-my $METADATA = qr/$IDENTIFIER$DOTTED_IDENTIFIER/;
-
-my $OPTIONAL_EXTRA_PART = qr/$PRERELEASE($PLUS_SEPARATOR$METADATA)?/;
-
 sub new {
     my ($class, $ival) = @_;
 
@@ -55,65 +41,50 @@ sub new {
     _die qq{Invalid semantic version string format: "$ival"}
         unless defined $major;
 
-    my $self = $class->SUPER::new("$major.$minor.$patch");
-    if (defined $prerelease) {
-        $self->{extra} = "-$prerelease";
-        @{$self->{prerelease}} = split $DOT_SEPARATOR, $prerelease;
+
+    return _init($class->SUPER::new("$major.$minor.$patch"), $prerelease, $meta);
+}
+
+sub _init {
+    my ($self, $pre, $meta) = @_;
+    if (defined $pre) {
+        $self->{extra} = "-$pre";
+        @{$self->{prerelease}} = split /[.]/, $pre;
     }
     if (defined $meta) {
         $self->{extra} .= "+$meta";
-        @{$self->{patch}} = split $DOT_SEPARATOR, $meta;
+        @{$self->{patch}} = split /[.]/, $meta;
     }
 
     return $self;
-}
-
-# Internal function to split up given string into prerelease- and patch-components
-sub _evalPreRelease {
-    no warnings 'uninitialized';
-    my $self = shift;
-    my $v = shift;
-    my ($preRelease, $plus, $patch) = (
-       $v =~ /^($PRERELEASE)(?:($PLUS_SEPARATOR)($METADATA))?$/
-    );
-    @{$self->{prerelease}} = split $DOT_SEPARATOR,$preRelease;
-    $self->{plus} = $plus;
-    @{$self->{patch}} = (split $DOT_SEPARATOR, $patch || undef);
-    return;
 }
 
 $VERSION = __PACKAGE__->new($VERSION); # For ourselves.
 
-sub declare {
-    my ($class, $ival) = @_;
+sub _lenient {
+    my ($class, $ctor, $ival) = @_;
     return $class->new($ival) if Scalar::Util::isvstring($ival)
         or eval { $ival->isa('version') };
 
-    (my $v = $ival) =~ s/^v?$STRICT_DOTTED_INTEGER_VERSION(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
-    my $dash  = $1;
-    my $extra = $2;
-    $v += 0 if $v =~ s/_//g; # ignore underscores.
-    my $self = $class->SUPER::declare($v);
-    $self->{dash}  = $dash;
-    $self->{extra} = $extra;
-    $self->_evalPreRelease($self->{extra});
-    return $self;
+    # Use official regex for prerelease and meta, use more lenient version num matching and whitespace.
+    my ($v, $prerelease, $meta) = (
+        $ival =~ /^[[:space:]]*
+            v?([\d_]+(?:\.[\d_]+(?:\.[\d_]+)?)?)
+            (?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?
+        [[:space:]]*$/x
+    );
+    $v += 0 if $v && $v =~ s/_//g; # ignore underscores.
+    my $code = $class->can("SUPER::$ctor");
+    return _init($code->($class, $v), $prerelease, $meta);
+
+}
+
+sub declare {
+    shift->_lenient('declare', @_);
 }
 
 sub parse {
-    my ($class, $ival) = @_;
-    return $class->new($ival) if Scalar::Util::isvstring($ival)
-        or eval { $ival->isa('version') };
-
-    (my $v = $ival) =~ s/^v?$STRICT_DOTTED_INTEGER_VERSION(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))[[:space:]]*$//;
-    my $dash  = $1;
-    my $extra = $2;
-    $v += 0 if $v =~ s/_//g; # ignore underscores.
-    my $self = $class->SUPER::parse($v);
-    $self->{dash}  = $dash;
-    $self->{extra} = $extra;
-    $self->_evalPreRelease($self->{extra});
-    return $self;
+    shift->_lenient('parse', @_);
 }
 
 sub stringify {
@@ -133,7 +104,6 @@ sub normal   {
 
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
-
 
 # Sort Ordering:
 # Precedence refers to how versions are compared to each other when ordered. Precedence MUST be calculated by
@@ -289,7 +259,7 @@ shown as returned by C<normal()>:
   '  012.2.2' | <error>  | 12.2.2      | 12.2.2
   '1.1'       | <error>  | 1.1.0       | 1.100.0
    1.1        | <error>  | 1.1.0       | 1.100.0
-  '1.1.0b1'   | <error>  | 1.1.0-b1    | 1.1.0-b1
+  '1.1.0-b1'  | 1.1.0-b1 | 1.1.0-b1    | 1.1.0-b1
   '1.1-b1'    | <error>  | 1.1.0-b1    | 1.100.0-b1
   '1.2.b1'    | <error>  | 1.2.0-b1    | 1.2.0-b1
   '9.0-beta4' | <error>  | 9.0.0-beta4 | 9.0.0-beta4

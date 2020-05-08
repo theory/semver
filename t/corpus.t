@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 102;
+use Test::More tests => 222;
 #use Test::More 'no_plan';
 
 use FindBin qw($Bin);
@@ -45,7 +45,13 @@ for my $v (qw(
     1.0.0-0A.is.legal
 )) {
     local $@;
-    ok my $sv = eval { SemVer->new($v) }, qq{"$v" should be valid} or diag $@;
+    ok my $sv = eval { SemVer->new($v) }, qq{New "$v" should be valid} or diag $@;
+    is $sv->stringify, $v, qq{Should stringify to "$v"};
+
+    ok $sv = eval { SemVer->declare($v) }, qq{Declare "$v" should work} or diag $@;
+    is $sv->stringify, $v, qq{Should stringify to "$v"};
+
+    ok $sv = eval { SemVer->parse($v) }, qq{Parse "$v" should work} or diag $@;
     is $sv->stringify, $v, qq{Should stringify to "$v"};
 }
 
