@@ -9,6 +9,7 @@ use overload (
     '""'   => 'stringify',
     '<=>'  => 'vcmp',
     'cmp'  => 'vcmp',
+    'bool' => 'vbool',
 );
 
 our @ISA = qw(version);
@@ -106,6 +107,10 @@ sub normal   {
 
 sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
+sub vbool {
+    my $self = shift;
+    return version::vcmp($self, $self->declare("0.0.0"), 1);
+}
 
 # Sort Ordering:
 # Precedence refers to how versions are compared to each other when ordered. Precedence MUST be calculated by
@@ -355,6 +360,14 @@ there.
 Returns true if an ASCII string is appended to the end of the version string.
 This also means that the version number is a "special version", in the
 semantic versioning specification meaning of the phrase.
+
+=head3 C<vbool>
+
+  say "Version $semver" if $semver;
+  say "Not a $semver" if !$semver;
+
+Returns true for a non-zero semantic semantic version object, without regard
+to the prerelease or build metadata parts. Overload boolean operations.
 
 =head3 C<vcmp>
 

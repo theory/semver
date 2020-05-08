@@ -15,6 +15,8 @@ Revision history for Perl extension SemVer.
       - Added tests for the official SemVer test corpus as linked under the
         FAQ about an official regular expression:
         https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+      - Added explicit boolean overloading to ensure consistent behavior
+        between different implementations of the version parent class.
 
 0.7.0  2018-07-24T11:09:17Z
       - Implemented Semantic Versioning 2.0.0 specification

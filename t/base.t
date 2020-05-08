@@ -12,14 +12,6 @@ my $CLASS;
 BEGIN {
     $CLASS = 'SemVer';
     use_ok $CLASS or die;
-
-    unless (eval { my $x = !$CLASS->new('1.0.0') }) {
-        # Borked version:vpp. Overload bool.
-        diag 'here';
-        $CLASS->overload::OVERLOAD(bool => sub {
-            version::vcmp(shift, $CLASS->declare('0.0.0'), 1);
-        });
-    }
 }
 
 diag 'Testing with version v', version->VERSION;
