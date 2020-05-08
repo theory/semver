@@ -1,6 +1,6 @@
 package SemVer;
 
-use 5.008001;
+use 5.010000;
 use strict;
 use version 0.82;
 use Scalar::Util ();
