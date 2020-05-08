@@ -1,6 +1,20 @@
 Revision history for Perl extension SemVer.
 
 0.10.0
+      - Adopted the official regular expression from the SemVer FAQ for strict
+        parsing by new(), as well as a modification of that regex for the more
+        lenient cases supported by declare() and new(). This results in the
+        following changes in the behavior of the parser:
+        +   SemVers with build metadata but no prerelease are now valid, e.g.
+            `1.1.2+meta`
+        +   SemVers with a numeric-only prerelease part are no longer valid
+            if that part has a leading zero, e.g., `1.2.3-123` is valid but
+            `1.2.3-0123` is not
+        +   Restored support for prerelease and build metadata parts are in
+            declare() and parse()
+      - Added tests for the official SemVer test corpus as linked under the
+        FAQ about an official regular expression:
+        https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
 
 0.7.0  2018-07-24T11:09:17Z
       - Implemented Semantic Versioning 2.0.0 specification
@@ -33,7 +47,7 @@ Revision history for Perl extension SemVer.
 0.3.0  2011-05-26T04:54:50
       - Made leading zeros, such as the "04" in "1.04.3" illegal when parsing
         via `new()`.
-      - Eliminted "Use of qw(...) as parentheses is deprecated" in the tests
+      - Eliminated "Use of qw(...) as parentheses is deprecated" in the tests
         when running on Perl 5.14.
 
 0.2.0  2010-09-17T17:59:57
