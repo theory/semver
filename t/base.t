@@ -45,7 +45,7 @@ for my $v (qw(
     v1.2.2
     999993333.0.0
 )) {
-    isa_ok my $semver =$CLASS->new($v), $CLASS, "new($v)";
+    isa_ok my $semver = $CLASS->new($v), $CLASS, "new($v)";
     my $str = $v =~ /^v/ ? substr $v, 1 : $v;
     is "$semver", $str, qq{$v should stringify to "$str"};
     $str =~ s/(\d)([a-z].+)$/$1-$2/;

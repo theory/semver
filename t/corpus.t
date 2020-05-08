@@ -4,7 +4,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 71;
+use Test::More tests => 102;
 #use Test::More 'no_plan';
 
 use FindBin qw($Bin);
@@ -42,11 +42,19 @@ for my $v (qw(
     1.2.3----R-S.12.9.1--.12+meta
     1.2.3----RC-SNAPSHOT.12.9.1--.12
     1.0.0+0.build.1-rc.10000aaa-kk-0.1
-    99999999999999999999999.999999999999999999.99999999999999999
     1.0.0-0A.is.legal
 )) {
     local $@;
-    ok eval { SemVer->new($v) }, "$v should be valid" or diag $@;
+    ok my $sv = eval { SemVer->new($v) }, qq{"$v" should be valid} or diag $@;
+    is $sv->stringify, $v, qq{Should stringify to "$v"};
+}
+
+SKIP: {
+    local $TODO = 'Large versions overflow version.pm integer bounds';
+    local $SIG{__WARN__} = sub { }; # Ignore version overflow warning
+    my $v = '99999999999999999999999.999999999999999999.99999999999999999';
+    ok my $sv = eval { SemVer->new($v) }, qq{"$v" should be valid};
+    is $sv->stringify, $v, qq{Should stringify to "$v"};
 }
 
 # Invalid Semantic Versions

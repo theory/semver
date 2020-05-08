@@ -43,21 +43,27 @@ sub new {
     if (eval { $ival->isa('version') }) {
         my $self = $class->SUPER::new($ival);
         $self->{extra} = $ival->{extra};
-        $self->{dash}  = $ival->{dash};
-        $self->_evalPreRelease($self->{extra});
+        $self->{patch} = $ival->{patch};
+        $self->{prerelease} = $ival->{prerelease};
         return $self;
     }
 
-    my ($val, $dash, $extra) = (
-        $ival =~ /^v?($STRICT_DOTTED_INTEGER_VERSION)(?:($DASH_SEPARATOR)($OPTIONAL_EXTRA_PART))?$/
+    # Regex taken from https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string.
+    my ($major, $minor, $patch, $prerelease, $meta) = (
+        $ival =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
     );
     _die qq{Invalid semantic version string format: "$ival"}
-        unless defined $val;
+        unless defined $major;
 
-    my $self = $class->SUPER::new($val);
-    $self->{dash}  = $dash;
-    $self->{extra} = $extra;
-    $self->_evalPreRelease($self->{extra});
+    my $self = $class->SUPER::new("$major.$minor.$patch");
+    if (defined $prerelease) {
+        $self->{extra} = "-$prerelease";
+        @{$self->{prerelease}} = split $DOT_SEPARATOR, $prerelease;
+    }
+    if (defined $meta) {
+        $self->{extra} .= "+$meta";
+        @{$self->{patch}} = split $DOT_SEPARATOR, $meta;
+    }
 
     return $self;
 }
@@ -122,7 +128,7 @@ sub normal   {
     my $self = shift;
     (my $norm = $self->SUPER::normal) =~ s/^v//;
     $norm =~ s/_/./g;
-    return $norm . ($self->{extra} ? "-$self->{extra}" : '');
+    return $norm . ($self->{extra} || '');
 }
 
 sub numify   { _die 'Semantic versions cannot be numified'; }
