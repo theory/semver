@@ -109,7 +109,7 @@ sub numify   { _die 'Semantic versions cannot be numified'; }
 sub is_alpha { !!shift->{extra} }
 sub vbool {
     my $self = shift;
-    return version::vcmp($self, $self->declare("0.0.0"), 1);
+    return version::vcmp($self, $self->new("0.0.0"), 1);
 }
 
 # Sort Ordering:
@@ -214,7 +214,7 @@ SemVer - Use semantic version numbers
 =head1 Description
 
 This module subclasses L<version> to create semantic versions, as defined by
-the L<Semantic Versioning 2.0.0 Specification|http://semver.org/spec/v2.0.0.html>.
+the L<Semantic Versioning 2.0.0 Specification|https://semver.org/spec/v2.0.0.html>.
 The three salient points of the specification, for the purposes of version
 formatting, are:
 
@@ -266,7 +266,7 @@ shown as returned by C<normal()>:
   '  012.2.2' | <error>  | 12.2.2      | 12.2.2
   '1.1'       | <error>  | 1.1.0       | 1.100.0
    1.1        | <error>  | 1.1.0       | 1.100.0
-  '1.1.0-b1'  | 1.1.0-b1 | 1.1.0-b1    | 1.1.0-b1
+  '1.1.0+b1'  | 1.1.0+b1 | 1.1.0+b1    | 1.1.0+b1
   '1.1-b1'    | <error>  | 1.1.0-b1    | 1.100.0-b1
   '1.2.b1'    | <error>  | 1.2.0-b1    | 1.2.0-b1
   '9.0-beta4' | <error>  | 9.0.0-beta4 | 9.0.0-beta4
@@ -286,7 +286,8 @@ As with L<version> objects, the comparison and stringification operators are
 all overloaded, so that you can compare semantic versions. You can also
 compare semantic versions with version objects (but not the other way around,
 alas). Boolean operators are also overloaded, such that all semantic version
-objects except for those consisting only of zeros are considered true.
+objects except for those consisting only of zeros (ignoring prerelease and
+metadata) are considered true.
 
 =head1 Interface
 
@@ -330,10 +331,10 @@ inconsistencies. Included only for proper compatibility with L<version>.
   SemVer->parse('1.02_30')->normal       # 1.230.0
   SemVer->parse(1.02_30)->normal         # 1.23.0
 
-Returns a normalized representation of the version. This string will always be
-a strictly-valid dotted-integer semantic version string suitable for passing
-to C<new()>. Unlike L<version>'s C<normal> method, there will be no leading
-"v".
+Returns a normalized representation of the version string. This string will
+always be a strictly-valid dotted-integer semantic version string suitable
+for passing to C<new()>. Unlike L<version>'s C<normal> method, there will be
+no leading "v".
 
 =head3 C<stringify>
 
@@ -357,9 +358,9 @@ there.
 
   my $is_alpha = $semver->is_alpha;
 
-Returns true if an ASCII string is appended to the end of the version string.
-This also means that the version number is a "special version", in the
-semantic versioning specification meaning of the phrase.
+Returns true if a prerelease and/or metadata string is appended to the end of
+the version string. This also means that the version number is a "special
+version", in the semantic versioning specification meaning of the phrase.
 
 =head3 C<vbool>
 
@@ -367,7 +368,7 @@ semantic versioning specification meaning of the phrase.
   say "Not a $semver" if !$semver;
 
 Returns true for a non-zero semantic semantic version object, without regard
-to the prerelease or build metadata parts. Overload boolean operations.
+to the prerelease or build metadata parts. Overloads boolean operations.
 
 =head3 C<vcmp>
 
@@ -376,7 +377,7 @@ returns 0 if they're the same, -1 if the invocant is smaller than the
 argument, and 1 if the invocant is greater than the argument.
 
 Mostly you don't need to worry about this: Just use the comparison operators
-instead. They will use this method:
+instead:
 
   if ($semver < $another_semver) {
       die "Need $another_semver or higher";
@@ -390,7 +391,7 @@ also compare regular L<version> objects:
   }
 
 You can also pass in a version string. It will be turned into a semantic
-version object using C<declare>. So if you're using integer versions, you may
+version object using C<declare>. So if you're using numeric versions, you may
 or may not get what you want:
 
   my $semver  = version::Semver->new('1.2.0');
@@ -399,15 +400,15 @@ or may not get what you want:
 
 If that's not what you want, pass the string to C<parse> first:
 
-  my $semver  = version::Semver->new('1.2.0');
-  my $version = version::Semver->parse('1.2'); # 1.200.0
+  my $semver  = Semver->new('1.2.0');
+  my $version = Semver->parse('1.2'); # 1.200.0
   my $bool    = $semver == $version; # false
 
 =head1 See Also
 
 =over
 
-=item * L<Semantic Versioning Specification|http://semver.org/>.
+=item * L<Semantic Versioning Specification|https://semver.org/>.
 
 =item * L<version>
 
@@ -418,12 +419,11 @@ If that's not what you want, pass the string to C<parse> first:
 =head1 Support
 
 This module is managed in an open
-L<GitHub repository|http://github.com/theory/semver/>. Feel free to fork and
-contribute, or to clone L<git://github.com/theory/semver.git> and send
+L<GitHub repository|https://github.com/theory/semver/>. Feel free to fork and
+contribute, or to clone L<https://github.com/theory/semver.git> and send
 patches!
 
-Found a bug? Please L<post|http://github.com/theory/semver/issues> or
-L<email|mailto:bug-semver@rt.cpan.org> a report!
+Found a bug? Please L<post|https://github.com/theory/semver/issues> a report!
 
 =head1 Acknowledgements
 
@@ -442,7 +442,7 @@ debugging help.
 
 =head1 Copyright and License
 
-Copyright (c) 2010-2018 David E. Wheeler. Some Rights Reserved.
+Copyright (c) 2010-2020 David E. Wheeler. Some Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
