@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 610;
+use Test::More tests => 666;
 #use Test::More 'no_plan';
 
 use FindBin qw($Bin);
@@ -29,7 +29,6 @@ can_ok $CLASS, qw(
 # Try the basics.
 isa_ok my $version = $CLASS->new('0.1.0'), $CLASS, 'An instance';
 isa_ok $SemVer::VERSION, $CLASS, q{SemVer's own $VERSION};
-my $is_vpp = !!grep { $_ eq 'version::vpp' } @version::ISA;
 
 for my $v (qw(
     1.2.2
@@ -45,19 +44,16 @@ for my $v (qw(
     v1.2.2
     999993333.0.0
 )) {
-    isa_ok my $semver =$CLASS->new($v), $CLASS, "new($v)";
+    isa_ok my $semver = $CLASS->new($v), $CLASS, "new($v)";
     my $str = $v =~ /^v/ ? substr $v, 1 : $v;
     is "$semver", $str, qq{$v should stringify to "$str"};
     $str =~ s/(\d)([a-z].+)$/$1-$2/;
     is $semver->normal, $str, qq{$v should normalize to "$str"};
 
-    SKIP: {
-        skip 'Boolean comparison broken with version::vpp', 1, $is_vpp;
-        if ($v =~ /0\.0\.0/) {
-            ok !$semver, "$v should be false";
-        } else {
-            ok !!$semver, "$v should be true";
-        }
+    if ($v =~ /0\.0\.0/) {
+        ok !$semver, "$v should be false";
+    } else {
+        ok !!$semver, "$v should be true";
     }
 
     ok $semver->is_qv, "$v should be dotted-decimal";
@@ -224,21 +220,27 @@ for my $v (qw(
     cmp_ok $v, 'eq', $semver, qq{"$v" eq $semver};
 }
 
+# Tweak tweak v prefix regex? Some versions of version:vpp do it differently.
+my $vq = qr/^\d+[.][^.]+$/;
+if ($CLASS->declare('0')->stringify eq 'v0') {
+    $vq = qr/^\d+([.]?[^.]+)?$/;
+}
+
 # Test declare() and parse.
 for my $spec (
     ['1.2.2',          '1.2.2'],
     ['01.2.2',         '1.2.2'],
     ['1.02.2',         '1.2.2'],
     ['1.2.02',         '1.2.2'],
-#    ['1.2.02b',        '1.2.2-b'],
-#    ['1.2.02beta-3  ', '1.2.2-beta-3'],
-#    ['1.02.02rc1',     '1.2.2-rc1'],
+    ['1.2.02-b',       '1.2.2-b'],
+    ['1.2.02-beta-3 ', '1.2.2-beta-3'],
+    ['1.02.02-rc1',    '1.2.2-rc1'],
     ['1.0',            '1.0.0'],
     ['1.1',            '1.1.0',   '1.100.0'],
     [ 1.1,             '1.1.0',   '1.100.0'],
-#    ['1.1b1',          '1.1.0-b1', '1.100.0-b1'],
-#    ['1b',             '1.0.0-b'],
-#    ['9.0beta4',       '9.0.0-beta4'],
+    ['1.1-b1',         '1.1.0-b1', '1.100.0-b1'],
+    ['1-b',            '1.0.0-b'],
+    ['9.0-beta4',      '9.0.0-beta4'],
     ['  012.2.2',      '12.2.2'],
     ['99999998',       '99999998.0.0'],
     ['1.02_30',        '1.23.0'],
@@ -251,7 +253,7 @@ for my $spec (
     ['9',              '9.0.0' ],
     ['0',              '0.0.0' ],
     [0,                '0.0.0' ],
-#    ['0rc1',           '0.0.0-rc1' ],
+    ['0-rc1',          '0.0.0-rc1' ],
 ) { SKIP: {
         skip 'Two-integer vstrings weak on Perl 5.8', 12
             if $no_2digitvst && Scalar::Util::isvstring($spec->[0]);
@@ -262,11 +264,8 @@ for my $spec (
     $string =~ s/^\s+//;
     $string =~ s/\s+$//;
     $string += 0 if $string =~ s/_//g;
-    my $vstring = $string =~ /^\d+[.][^.]+$/ ? "v$string" : $string;
-    SKIP: {
-        skip 'Stringification broken with version::vpp', 1, $is_vpp;
-        is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
-    }
+    my $vstring = $string =~ $vq ? "v$string" : $string;
+    is $l->stringify, $vstring, qq{... And it should stringify to "$vstring"};
     is $l->normal, $spec->[1],  qq{... And it should normalize to "$spec->[1]"};
 
     # Compare the non-semantic version string to the semantic one.
