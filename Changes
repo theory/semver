@@ -1,6 +1,6 @@
 Revision history for Perl extension SemVer.
 
-0.10.0
+0.10.0  2020-05-09T13:58:26Z
       - Adopted the official regular expression from the SemVer FAQ for strict
         parsing by new(), as well as a modification of that regex for the more
         lenient cases supported by declare() and new(). This results in the
