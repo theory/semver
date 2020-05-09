@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 755;
+use Test::More tests => 941;
 #use Test::More 'no_plan';
 
 use FindBin qw($Bin);
@@ -142,29 +142,61 @@ for my $spec (
     cmp_ok $l, 'ge', $r, "$l ge $r";
 }
 
-# Test equivalents with declare
+# Test equivalents with declare()
 for my $spec (
     [ '1.2.0',                '1.2' ],
     [ '0.0.0',                '0' ],
+    [ '1.4_0',                '1.4' ],
+    [ '1.08',                 '1.8' ],
+    [ 1.02_30,                '1.23.0' ],
+    [ '1.02_30',              '1.23.0' ],
     [ '999.888.7777-alpha.3', '999.888.7777-alpha.3' ],
     [ '0.1.2-beta3',          '0.1.2-beta3' ],
     [ '1.0.0-rc-1',           '1.0.0-RC-1' ],
 ) {
     my $l = $CLASS->declare($spec->[0]);
     my $r = $CLASS->declare($spec->[1]);
-    is $l->vcmp($r), 0, "$l->vcmp($r) == 0";
-    is $l <=> $r, 0, "$l <=> $r == 0";
-    is $r <=> $l, 0, "$r <=> $l == 0";
-    cmp_ok $l, '==', $r, "$l == $r";
-    cmp_ok $l, '==', $r, "$l == $r";
-    cmp_ok $l, '<=', $r, "$l <= $r";
-    cmp_ok $l, '>=', $r, "$l >= $r";
-    is $l cmp $r, 0, "$l cmp $r == 0";
-    is $r cmp $l, 0, "$r cmp $l == 0";
-    cmp_ok $l, 'eq', $r, "$l eq $r";
-    cmp_ok $l, 'eq', $r, "$l eq $r";
-    cmp_ok $l, 'le', $r, "$l le $r";
-    cmp_ok $l, 'ge', $r, "$l ge $r";
+    is $l->vcmp($r), 0, "declare $l->vcmp($r) == 0";
+    is $l <=> $r, 0, "declare $l <=> $r == 0";
+    is $r <=> $l, 0, "declare $r <=> $l == 0";
+    cmp_ok $l, '==', $r, "declare $l == $r";
+    cmp_ok $l, '==', $r, "declare $l == $r";
+    cmp_ok $l, '<=', $r, "declare $l <= $r";
+    cmp_ok $l, '>=', $r, "declare $l >= $r";
+    is $l cmp $r, 0, "declare $l cmp $r == 0";
+    is $r cmp $l, 0, "declare $r cmp $l == 0";
+    cmp_ok $l, 'eq', $r, "declare $l eq $r";
+    cmp_ok $l, 'eq', $r, "declare $l eq $r";
+    cmp_ok $l, 'le', $r, "declare $l le $r";
+    cmp_ok $l, 'ge', $r, "declare $l ge $r";
+}
+
+# Test equivalents with parse()
+for my $spec (
+    [ '1.02.0',               '1.2.0' ],
+    [ '0.0.0',                '0' ],
+    [ '1.4_0',                '1.4' ],
+    [ 1.02_30,                '1.23.0' ],
+    [ '1.02_30',              '1.23.0' ],
+    [ '999.888.7777-alpha.3', '999.888.7777-alpha.3' ],
+    [ '0.1.2-beta3',          '0.1.2-beta3' ],
+    [ '1.0.0-rc-1',           '1.0.0-RC-1' ],
+) {
+    my $l = $CLASS->parse($spec->[0]);
+    my $r = $CLASS->parse($spec->[1]);
+    is $l->vcmp($r), 0, "parse $l->vcmp($r) == 0";
+    is $l <=> $r, 0, "parse $l <=> $r == 0";
+    is $r <=> $l, 0, "parse $r <=> $l == 0";
+    cmp_ok $l, '==', $r, "parse $l == $r";
+    cmp_ok $l, '==', $r, "parse $l == $r";
+    cmp_ok $l, '<=', $r, "parse $l <= $r";
+    cmp_ok $l, '>=', $r, "parse $l >= $r";
+    is $l cmp $r, 0, "parse $l cmp $r == 0";
+    is $r cmp $l, 0, "parse $r cmp $l == 0";
+    cmp_ok $l, 'eq', $r, "parse $l eq $r";
+    cmp_ok $l, 'eq', $r, "parse $l eq $r";
+    cmp_ok $l, 'le', $r, "parse $l le $r";
+    cmp_ok $l, 'ge', $r, "parse $l ge $r";
 }
 
 # Test not equal.
@@ -194,13 +226,33 @@ for my $spec (
     ['1.2.3-b', '1.2.3'],
     ['1.2.3',   '1.2.3-b'],
     ['1.2.3-a', '1.2.3-b'],
+    ['1.2_0',   '1.20' ],
     ['1.2.3-aaaaaaa1', '1.2.3-aaaaaaa2'],
 ) {
     my $l = $CLASS->declare($spec->[0]);
     my $r = $CLASS->declare($spec->[1]);
-    cmp_ok $l->vcmp($r), '!=', 0, "$l->vcmp($r) != 0";
-    cmp_ok $l, '!=', $r, "$l != $r";
-    cmp_ok $l, 'ne', $r, "$l ne $r";
+    cmp_ok $l->vcmp($r), '!=', 0, "declare $l->vcmp($r) != 0";
+    cmp_ok $l, '!=', $r, "declare $l != $r";
+    cmp_ok $l, 'ne', $r, "declare $l ne $r";
+}
+
+# Test not equal with parse.
+for my $spec (
+    ['1.2.2',   '1.2.3'],
+    ['0.0.1',   '1.0.0'],
+    ['1.0.1',   '1.1.0'],
+    ['1.1.1',   '1.1.0'],
+    ['1.2.3-b', '1.2.3'],
+    ['1.2.3',   '1.2.3-b'],
+    ['1.2.3-a', '1.2.3-b'],
+    ['1.2_0',   '1.2.0' ],
+    ['1.2.3-aaaaaaa1', '1.2.3-aaaaaaa2'],
+) {
+    my $l = $CLASS->parse($spec->[0]);
+    my $r = $CLASS->parse($spec->[1]);
+    cmp_ok $l->vcmp($r), '!=', 0, "parse $l->vcmp($r) != 0";
+    cmp_ok $l, '!=', $r, "parse $l != $r";
+    cmp_ok $l, 'ne', $r, "parse $l ne $r";
 }
 
 # Test >, >=, <, and <=.
