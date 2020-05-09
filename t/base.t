@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 666;
+use Test::More tests => 755;
 #use Test::More 'no_plan';
 
 use FindBin qw($Bin);
@@ -142,6 +142,31 @@ for my $spec (
     cmp_ok $l, 'ge', $r, "$l ge $r";
 }
 
+# Test equivalents with declare
+for my $spec (
+    [ '1.2.0',                '1.2' ],
+    [ '0.0.0',                '0' ],
+    [ '999.888.7777-alpha.3', '999.888.7777-alpha.3' ],
+    [ '0.1.2-beta3',          '0.1.2-beta3' ],
+    [ '1.0.0-rc-1',           '1.0.0-RC-1' ],
+) {
+    my $l = $CLASS->declare($spec->[0]);
+    my $r = $CLASS->declare($spec->[1]);
+    is $l->vcmp($r), 0, "$l->vcmp($r) == 0";
+    is $l <=> $r, 0, "$l <=> $r == 0";
+    is $r <=> $l, 0, "$r <=> $l == 0";
+    cmp_ok $l, '==', $r, "$l == $r";
+    cmp_ok $l, '==', $r, "$l == $r";
+    cmp_ok $l, '<=', $r, "$l <= $r";
+    cmp_ok $l, '>=', $r, "$l >= $r";
+    is $l cmp $r, 0, "$l cmp $r == 0";
+    is $r cmp $l, 0, "$r cmp $l == 0";
+    cmp_ok $l, 'eq', $r, "$l eq $r";
+    cmp_ok $l, 'eq', $r, "$l eq $r";
+    cmp_ok $l, 'le', $r, "$l le $r";
+    cmp_ok $l, 'ge', $r, "$l ge $r";
+}
+
 # Test not equal.
 for my $spec (
     ['1.2.2',   '1.2.3'],
@@ -155,6 +180,24 @@ for my $spec (
 ) {
     my $l = $CLASS->new($spec->[0]);
     my $r = $CLASS->new($spec->[1]);
+    cmp_ok $l->vcmp($r), '!=', 0, "$l->vcmp($r) != 0";
+    cmp_ok $l, '!=', $r, "$l != $r";
+    cmp_ok $l, 'ne', $r, "$l ne $r";
+}
+
+# Test not equal with declare.
+for my $spec (
+    ['1.2.2',   '1.2.3'],
+    ['0.0.1',   '1.0.0'],
+    ['1.0.1',   '1.1.0'],
+    ['1.1.1',   '1.1.0'],
+    ['1.2.3-b', '1.2.3'],
+    ['1.2.3',   '1.2.3-b'],
+    ['1.2.3-a', '1.2.3-b'],
+    ['1.2.3-aaaaaaa1', '1.2.3-aaaaaaa2'],
+) {
+    my $l = $CLASS->declare($spec->[0]);
+    my $r = $CLASS->declare($spec->[1]);
     cmp_ok $l->vcmp($r), '!=', 0, "$l->vcmp($r) != 0";
     cmp_ok $l, '!=', $r, "$l != $r";
     cmp_ok $l, 'ne', $r, "$l ne $r";
