@@ -6,7 +6,7 @@ jobs:
       matrix:
         os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
         # 5.18 https://github.com/shogo82148/actions-setup-perl/issues/222
-        perl: [ '5.30', '5.28', '5.26', '5.24', '5.22','5.20', '5.16', '5.14' ]
+        perl: [ '5.30', '5.28', '5.26', '5.24', '5.22', '5.20', '5.18', '5.16', '5.14' ]
     name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest', 'macos-latest']
-        perl: [ '5.18', '5.12', '5.10', '5.8']
+        perl: [ '5.12', '5.10', '5.8']
     name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
