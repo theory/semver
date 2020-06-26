@@ -1,12 +1,17 @@
 name: CI
 on: [push]
 jobs:
-  modern_perl:
+  build:
     strategy:
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-        # 5.18 https://github.com/shogo82148/actions-setup-perl/issues/222
-        perl: [ '5.30', '5.28', '5.26', '5.24', '5.22', '5.20', '5.18', '5.16', '5.14' ]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        perl: [ '5.32', '5.30', '5.28', '5.26', '5.24', '5.22', '5.20', '5.18', '5.16', '5.14', '5.12', '5.10', '5.8' ]
+        exclude:
+          # https://github.com/shogo82148/actions-setup-perl/issues/225
+          - { os: windows-latest, perl: '5.8'  }
+          - { os: windows-latest, perl: '5.10' }
+          - { os: windows-latest, perl: '5.12' }
+          - { os: windows-latest, perl: '5.32' } # Not on Strawberry yet.
     name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -15,22 +20,7 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
-      - run: perl -V
-      - run: cpanm --installdeps --with-recommends --notest -v .
-      - run: prove -lv t
-  legacy_perl:
-    strategy:
-      matrix:
-        os: ['ubuntu-latest', 'macos-latest']
-        perl: [ '5.12', '5.10', '5.8']
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v1
-      - name: Setup perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: ${{ matrix.perl }}
+          distribution: strawberry # this option only used on Windows
       - run: perl -V
       - run: cpanm --installdeps --with-recommends --notest -v .
       - run: prove -lv t

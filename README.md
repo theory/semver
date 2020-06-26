@@ -1,6 +1,9 @@
 SemVer version 0.10.1
 =====================
 
+[![CPAN version](https://badge.fury.io/pl/SemVer.svg)](https://badge.fury.io/pl/SemVer)
+[![Build Status](https://github.com/theory/semver/workflows/CI/badge.svg)](https://github.com/theory/semver/actions/)
+
 This module subclasses [`version`] to create semantic versions, as defined by
 the [Semantic Versioning 2.0.0 Specification]
 The salient points of the specification, for the purposes of version
