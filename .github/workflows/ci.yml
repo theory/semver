@@ -12,7 +12,7 @@ jobs:
           - { os: windows-latest, perl: '5.10' }
           - { os: windows-latest, perl: '5.12' }
           - { os: windows-latest, perl: '5.32' } # Not on Strawberry yet.
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    name: 🐪 Perl ${{ matrix.perl }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v1
